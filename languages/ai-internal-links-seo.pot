@@ -1,0 +1,233 @@
+# Copyright (C) 2024 PIU Digital
+# This file is distributed under the same license as the AI Internal Links SEO plugin.
+msgid ""
+msgstr ""
+"Project-Id-Version: AI Internal Links SEO 1.0.0\n"
+"Report-Msgid-Bugs-To: https://piu.digital\n"
+"POT-Creation-Date: 2024-01-01 00:00+0000\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"PO-Revision-Date: 2024-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+
+#: admin/class-admin.php
+msgid "AI Internal Links"
+msgstr ""
+
+#: admin/class-admin.php
+msgid "Dashboard"
+msgstr ""
+
+#: admin/class-admin.php
+msgid "Analisar Posts"
+msgstr ""
+
+#: admin/class-admin.php
+msgid "Sugestões"
+msgstr ""
+
+#: admin/class-admin.php
+msgid "Configurações"
+msgstr ""
+
+#: admin/views/dashboard.php
+msgid "Pendentes"
+msgstr ""
+
+#: admin/views/dashboard.php
+msgid "Aplicados"
+msgstr ""
+
+#: admin/views/dashboard.php
+msgid "Rejeitados"
+msgstr ""
+
+#: admin/views/dashboard.php
+msgid "Posts Analisados"
+msgstr ""
+
+#: admin/views/dashboard.php
+msgid "Ações Rápidas"
+msgstr ""
+
+#: admin/views/dashboard.php
+msgid "Status da API"
+msgstr ""
+
+#: admin/views/dashboard.php
+msgid "API Key não configurada."
+msgstr ""
+
+#: admin/views/dashboard.php
+msgid "Configurar agora"
+msgstr ""
+
+#: admin/views/dashboard.php
+msgid "API Key configurada."
+msgstr ""
+
+#: admin/views/dashboard.php
+msgid "Testar Conexão"
+msgstr ""
+
+#: admin/views/dashboard.php
+msgid "Como Usar"
+msgstr ""
+
+#: admin/views/analysis.php
+msgid "Título"
+msgstr ""
+
+#: admin/views/analysis.php
+msgid "Tipo"
+msgstr ""
+
+#: admin/views/analysis.php
+msgid "Data"
+msgstr ""
+
+#: admin/views/analysis.php
+msgid "Ações"
+msgstr ""
+
+#: admin/views/analysis.php
+msgid "Analisar"
+msgstr ""
+
+#: admin/views/analysis.php
+msgid "Ver Sugestões"
+msgstr ""
+
+#: admin/views/suggestions.php
+msgid "Sugestões de Links"
+msgstr ""
+
+#: admin/views/suggestions.php
+msgid "Todas"
+msgstr ""
+
+#: admin/views/suggestions.php
+msgid "Pendente"
+msgstr ""
+
+#: admin/views/suggestions.php
+msgid "Aplicada"
+msgstr ""
+
+#: admin/views/suggestions.php
+msgid "Rejeitada"
+msgstr ""
+
+#: admin/views/suggestions.php
+msgid "Score de Confiança"
+msgstr ""
+
+#: admin/views/suggestions.php
+msgid "Post de Origem:"
+msgstr ""
+
+#: admin/views/suggestions.php
+msgid "Link para:"
+msgstr ""
+
+#: admin/views/suggestions.php
+msgid "Texto Âncora:"
+msgstr ""
+
+#: admin/views/suggestions.php
+msgid "Contexto:"
+msgstr ""
+
+#: admin/views/suggestions.php
+msgid "Justificativa da IA:"
+msgstr ""
+
+#: admin/views/suggestions.php
+msgid "Aplicar Link"
+msgstr ""
+
+#: admin/views/suggestions.php
+msgid "Rejeitar"
+msgstr ""
+
+#: admin/views/suggestions.php
+msgid "Desfazer"
+msgstr ""
+
+#: admin/views/settings.php
+msgid "Configuração da API"
+msgstr ""
+
+#: admin/views/settings.php
+msgid "API Key (Gemini)"
+msgstr ""
+
+#: admin/views/settings.php
+msgid "Tipos de Conteúdo"
+msgstr ""
+
+#: admin/views/settings.php
+msgid "Post Types para Análise"
+msgstr ""
+
+#: admin/views/settings.php
+msgid "Limites e Qualidade"
+msgstr ""
+
+#: admin/views/settings.php
+msgid "Máximo de Links por Post"
+msgstr ""
+
+#: admin/views/settings.php
+msgid "Score Mínimo de Confiança"
+msgstr ""
+
+#: admin/views/settings.php
+msgid "Boas Práticas de SEO"
+msgstr ""
+
+#: admin/views/settings.php
+msgid "Salvar Configurações"
+msgstr ""
+
+#: includes/class-plugin.php
+msgid "Permissão negada."
+msgstr ""
+
+#: includes/class-ai-client.php
+msgid "Conexão com a API estabelecida com sucesso!"
+msgstr ""
+
+#: includes/class-analyzer.php
+msgid "Post não encontrado ou não publicado."
+msgstr ""
+
+#: includes/class-analyzer.php
+msgid "Não há posts disponíveis para criar links internos."
+msgstr ""
+
+#: includes/class-link-applier.php
+msgid "Sugestão não encontrada."
+msgstr ""
+
+#: includes/class-link-applier.php
+msgid "Esta sugestão já foi processada."
+msgstr ""
+
+#: includes/class-link-applier.php
+msgid "Post não encontrado."
+msgstr ""
+
+#: includes/class-link-applier.php
+msgid "Link aplicado com sucesso!"
+msgstr ""
+
+#: includes/class-link-applier.php
+msgid "Sugestão rejeitada."
+msgstr ""
+
+#: includes/class-link-applier.php
+msgid "Link removido com sucesso! A sugestão voltou para pendente."
+msgstr ""

@@ -1,0 +1,683 @@
+/**
+ * AI Internal Links SEO - Admin Styles
+ *
+ * @package AIInternalLinksSEO
+ */
+
+/* ==========================================================================
+   Base Styles
+   ========================================================================== */
+
+.ailseo-wrap h1 {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.ailseo-wrap h1 .dashicons {
+    font-size: 28px;
+    width: 28px;
+    height: 28px;
+}
+
+/* ==========================================================================
+   Dashboard
+   ========================================================================== */
+
+.ailseo-dashboard {
+    margin-top: 20px;
+}
+
+/* Stats Grid */
+.ailseo-stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 20px;
+    margin-bottom: 30px;
+}
+
+.ailseo-stat-card {
+    background: #fff;
+    border: 1px solid #ccd0d4;
+    border-radius: 4px;
+    padding: 20px;
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    box-shadow: 0 1px 1px rgba(0, 0, 0, 0.04);
+}
+
+.ailseo-stat-icon {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.ailseo-stat-icon .dashicons {
+    font-size: 24px;
+    width: 24px;
+    height: 24px;
+    color: #fff;
+}
+
+.ailseo-stat-icon.pending {
+    background: #f0b849;
+}
+
+.ailseo-stat-icon.applied {
+    background: #46b450;
+}
+
+.ailseo-stat-icon.rejected {
+    background: #dc3232;
+}
+
+.ailseo-stat-icon.analyzed {
+    background: #0073aa;
+}
+
+.ailseo-stat-content {
+    display: flex;
+    flex-direction: column;
+}
+
+.ailseo-stat-number {
+    font-size: 28px;
+    font-weight: 600;
+    line-height: 1;
+    color: #1e1e1e;
+}
+
+.ailseo-stat-label {
+    color: #646970;
+    margin-top: 5px;
+}
+
+/* Quick Actions */
+.ailseo-quick-actions {
+    background: #fff;
+    border: 1px solid #ccd0d4;
+    border-radius: 4px;
+    padding: 20px;
+    margin-bottom: 30px;
+}
+
+.ailseo-quick-actions h2 {
+    margin-top: 0;
+    padding-bottom: 10px;
+    border-bottom: 1px solid #eee;
+}
+
+.ailseo-action-buttons {
+    display: flex;
+    gap: 15px;
+    flex-wrap: wrap;
+    margin-top: 15px;
+}
+
+.ailseo-action-buttons .button-hero {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.ailseo-action-buttons .button-hero .dashicons {
+    font-size: 18px;
+    width: 18px;
+    height: 18px;
+}
+
+/* API Status */
+.ailseo-api-status {
+    background: #fff;
+    border: 1px solid #ccd0d4;
+    border-radius: 4px;
+    padding: 20px;
+    margin-bottom: 30px;
+}
+
+.ailseo-api-status h2 {
+    margin-top: 0;
+}
+
+.ailseo-api-test {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+#ailseo-api-test-result {
+    font-weight: 500;
+}
+
+#ailseo-api-test-result.success {
+    color: #46b450;
+}
+
+#ailseo-api-test-result.error {
+    color: #dc3232;
+}
+
+/* How To */
+.ailseo-how-to {
+    background: #fff;
+    border: 1px solid #ccd0d4;
+    border-radius: 4px;
+    padding: 20px;
+}
+
+.ailseo-how-to h2 {
+    margin-top: 0;
+}
+
+.ailseo-steps {
+    padding-left: 20px;
+}
+
+.ailseo-steps li {
+    margin-bottom: 15px;
+}
+
+.ailseo-steps li strong {
+    display: block;
+    color: #1e1e1e;
+}
+
+.ailseo-steps li p {
+    margin: 5px 0 0;
+    color: #646970;
+}
+
+/* ==========================================================================
+   Analysis Page
+   ========================================================================== */
+
+.ailseo-filters {
+    background: #fff;
+    border: 1px solid #ccd0d4;
+    border-radius: 4px;
+    padding: 15px;
+    margin: 20px 0;
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    align-items: center;
+}
+
+.ailseo-filters select {
+    min-width: 150px;
+}
+
+.ailseo-posts-list {
+    margin-top: 20px;
+}
+
+.ailseo-posts-list .column-type,
+.ailseo-posts-list .column-date {
+    width: 100px;
+}
+
+.ailseo-posts-list .column-suggestions {
+    width: 120px;
+}
+
+.ailseo-posts-list .column-actions {
+    width: 200px;
+}
+
+/* Badges */
+.ailseo-badge {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 3px;
+    font-size: 12px;
+    font-weight: 500;
+}
+
+.ailseo-badge.pending {
+    background: #fcf9e8;
+    color: #9a7b1d;
+}
+
+.ailseo-badge.applied {
+    background: #e7f7e8;
+    color: #1e7e24;
+}
+
+.ailseo-badge.none {
+    background: #f0f0f1;
+    color: #646970;
+}
+
+.ailseo-analyze-btn .dashicons {
+    font-size: 16px;
+    width: 16px;
+    height: 16px;
+    vertical-align: text-bottom;
+}
+
+/* Pagination */
+.ailseo-pagination {
+    margin: 20px 0;
+    text-align: center;
+}
+
+.ailseo-pagination .page-numbers {
+    display: inline-block;
+    padding: 5px 10px;
+    margin: 0 2px;
+    text-decoration: none;
+    border: 1px solid #ccd0d4;
+    border-radius: 3px;
+    background: #fff;
+}
+
+.ailseo-pagination .page-numbers.current {
+    background: #0073aa;
+    color: #fff;
+    border-color: #0073aa;
+}
+
+/* No Posts */
+.ailseo-no-posts {
+    text-align: center;
+    padding: 40px;
+    background: #fff;
+    border: 1px solid #ccd0d4;
+    border-radius: 4px;
+    color: #646970;
+}
+
+/* ==========================================================================
+   Suggestions Page
+   ========================================================================== */
+
+.ailseo-suggestions-list {
+    margin-top: 20px;
+}
+
+.ailseo-suggestion-card {
+    background: #fff;
+    border: 1px solid #ccd0d4;
+    border-radius: 4px;
+    margin-bottom: 20px;
+    overflow: hidden;
+}
+
+.ailseo-suggestion-card.status-applied {
+    border-left: 4px solid #46b450;
+}
+
+.ailseo-suggestion-card.status-pending {
+    border-left: 4px solid #f0b849;
+}
+
+.ailseo-suggestion-card.status-rejected {
+    border-left: 4px solid #dc3232;
+    opacity: 0.7;
+}
+
+.ailseo-suggestion-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 15px 20px;
+    background: #f6f7f7;
+    border-bottom: 1px solid #eee;
+}
+
+.ailseo-suggestion-meta {
+    display: flex;
+    gap: 15px;
+    align-items: center;
+}
+
+.ailseo-suggestion-status {
+    padding: 3px 10px;
+    border-radius: 3px;
+    font-size: 12px;
+    font-weight: 600;
+    text-transform: uppercase;
+}
+
+.ailseo-suggestion-status.pending {
+    background: #fcf9e8;
+    color: #9a7b1d;
+}
+
+.ailseo-suggestion-status.applied {
+    background: #e7f7e8;
+    color: #1e7e24;
+}
+
+.ailseo-suggestion-status.rejected {
+    background: #fbeaea;
+    color: #a51d1d;
+}
+
+.ailseo-suggestion-score {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    color: #646970;
+}
+
+.ailseo-suggestion-date {
+    color: #646970;
+    font-size: 12px;
+}
+
+.ailseo-suggestion-info {
+    padding: 20px;
+    border-bottom: 1px solid #eee;
+}
+
+.ailseo-suggestion-posts {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    flex-wrap: wrap;
+    margin-bottom: 15px;
+}
+
+.ailseo-suggestion-source,
+.ailseo-suggestion-target {
+    flex: 1;
+    min-width: 200px;
+}
+
+.ailseo-suggestion-arrow {
+    color: #0073aa;
+}
+
+.ailseo-suggestion-anchor {
+    margin-top: 10px;
+}
+
+.ailseo-suggestion-anchor code {
+    background: #f0f6fc;
+    padding: 2px 8px;
+    border-radius: 3px;
+    color: #0073aa;
+}
+
+.ailseo-suggestion-preview {
+    padding: 20px;
+    border-bottom: 1px solid #eee;
+}
+
+.ailseo-paragraph-preview {
+    background: #f6f7f7;
+    padding: 15px;
+    border-radius: 4px;
+    margin-top: 10px;
+    line-height: 1.6;
+    font-size: 14px;
+}
+
+.ailseo-paragraph-preview mark {
+    background: #ffeb3b;
+    padding: 2px 4px;
+    border-radius: 2px;
+}
+
+.ailseo-suggestion-justification {
+    padding: 15px 20px;
+    background: #f0f6fc;
+    border-bottom: 1px solid #eee;
+}
+
+.ailseo-suggestion-justification p {
+    margin: 5px 0 0;
+    color: #1e1e1e;
+    font-style: italic;
+}
+
+.ailseo-suggestion-actions {
+    padding: 15px 20px;
+    display: flex;
+    gap: 10px;
+    align-items: center;
+}
+
+.ailseo-suggestion-actions .button .dashicons {
+    font-size: 16px;
+    width: 16px;
+    height: 16px;
+    vertical-align: text-bottom;
+}
+
+.ailseo-applied-info {
+    color: #646970;
+    font-size: 12px;
+    margin-left: 10px;
+}
+
+.ailseo-suggestions-header {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+/* No Suggestions */
+.ailseo-no-suggestions {
+    text-align: center;
+    padding: 60px 40px;
+    background: #fff;
+    border: 1px solid #ccd0d4;
+    border-radius: 4px;
+}
+
+/* ==========================================================================
+   Settings Page
+   ========================================================================== */
+
+.ailseo-settings-form {
+    max-width: 800px;
+}
+
+.ailseo-settings-section {
+    background: #fff;
+    border: 1px solid #ccd0d4;
+    border-radius: 4px;
+    padding: 20px;
+    margin: 20px 0;
+}
+
+.ailseo-settings-section h2 {
+    margin-top: 0;
+    padding-bottom: 10px;
+    border-bottom: 1px solid #eee;
+}
+
+.ailseo-api-key-field {
+    display: flex;
+    gap: 5px;
+    align-items: center;
+}
+
+.ailseo-toggle-password {
+    padding: 4px 8px !important;
+}
+
+.ailseo-api-test-wrapper {
+    margin-top: 15px;
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.ailseo-range-field {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.ailseo-range-field input[type="range"] {
+    width: 200px;
+}
+
+.ailseo-range-value {
+    font-weight: 600;
+    min-width: 50px;
+}
+
+/* Tips Section */
+.ailseo-info-section {
+    background: #f0f6fc;
+}
+
+.ailseo-tips ul {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.ailseo-tips li {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    margin-bottom: 10px;
+}
+
+.ailseo-tips li .dashicons-yes-alt {
+    color: #46b450;
+}
+
+.ailseo-tips li .dashicons-warning {
+    color: #f0b849;
+}
+
+/* ==========================================================================
+   Modal
+   ========================================================================== */
+
+.ailseo-modal {
+    position: fixed;
+    z-index: 100000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.ailseo-modal-content {
+    background: #fff;
+    padding: 30px;
+    border-radius: 4px;
+    max-width: 600px;
+    width: 90%;
+    max-height: 80vh;
+    overflow-y: auto;
+    position: relative;
+}
+
+.ailseo-modal-close {
+    position: absolute;
+    right: 15px;
+    top: 10px;
+    font-size: 28px;
+    font-weight: bold;
+    cursor: pointer;
+    color: #646970;
+}
+
+.ailseo-modal-close:hover {
+    color: #1e1e1e;
+}
+
+/* ==========================================================================
+   Loading State
+   ========================================================================== */
+
+.ailseo-loading {
+    opacity: 0.6;
+    pointer-events: none;
+}
+
+.ailseo-loading::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 20px;
+    height: 20px;
+    margin: -10px 0 0 -10px;
+    border: 3px solid #ccd0d4;
+    border-top-color: #0073aa;
+    border-radius: 50%;
+    animation: ailseo-spin 1s linear infinite;
+}
+
+@keyframes ailseo-spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+/* Button Loading State */
+.button.ailseo-loading {
+    position: relative;
+    color: transparent !important;
+}
+
+.button.ailseo-loading .dashicons {
+    visibility: hidden;
+}
+
+.button.ailseo-loading::after {
+    width: 14px;
+    height: 14px;
+    margin: -7px 0 0 -7px;
+    border-width: 2px;
+}
+
+/* ==========================================================================
+   Responsive
+   ========================================================================== */
+
+@media screen and (max-width: 782px) {
+    .ailseo-stats-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .ailseo-action-buttons {
+        flex-direction: column;
+    }
+
+    .ailseo-action-buttons .button-hero {
+        width: 100%;
+        justify-content: center;
+    }
+
+    .ailseo-suggestion-posts {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .ailseo-suggestion-arrow {
+        transform: rotate(90deg);
+    }
+}
+
+@media screen and (max-width: 480px) {
+    .ailseo-stats-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .ailseo-filters {
+        flex-direction: column;
+    }
+
+    .ailseo-filters select,
+    .ailseo-filters .button {
+        width: 100%;
+    }
+}
