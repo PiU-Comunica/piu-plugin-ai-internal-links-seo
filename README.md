@@ -34,9 +34,16 @@ O AI Internal Links SEO analisa o conteudo dos seus posts e sugere links interno
 
 - Acesse **AI Internal Links > Configuracoes**
 - Insira sua API Key do Gemini
+- Escolha o modelo Gemini desejado (padrao recomendado: Gemini 2.5 Flash)
 - Selecione quais tipos de post podem ser analisados (ex: Posts, Paginas)
 - Defina o numero maximo de links por post (recomendado: 2-3)
 - Ajuste o score minimo de confianca (recomendado: 70%)
+
+Modelos disponiveis nas configuracoes:
+
+- Gemini 2.5 Flash (`gemini-2.5-flash`) - padrao recomendado
+- Gemini 3.1 Flash-Lite (`gemini-3.1-flash-lite`) - mais rapido e economico
+- Gemini 3 Flash Preview (`gemini-3-flash-preview`) - mais novo, sujeito a mudancas da API
 
 ### 2. Analisar Posts
 
@@ -82,6 +89,7 @@ O AI Internal Links SEO analisa o conteudo dos seus posts e sugere links interno
 
 ### Configuracoes
 - API Key segura (campo password)
+- Selecao do modelo Gemini usado nas analises
 - Selecao de post types
 - Limites personalizaveis
 - Teste de conexao com API

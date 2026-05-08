@@ -76,6 +76,7 @@
             var $button = $(this);
             var $result = $('#ailseo-api-test-result');
             var apiKey = $('#ailseo_api_key').val().trim();
+            var model = $('#ailseo_gemini_model').val();
 
             // Validar se a API Key foi preenchida
             if (!apiKey) {
@@ -92,7 +93,8 @@
                 data: {
                     action: 'ailseo_test_api',
                     nonce: ailseo.nonce,
-                    api_key: apiKey
+                    api_key: apiKey,
+                    model: model
                 },
                 success: function(response) {
                     if (response.success) {

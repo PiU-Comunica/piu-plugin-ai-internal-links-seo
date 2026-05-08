@@ -61,6 +61,25 @@ if ( ! defined( 'ABSPATH' ) ) {
                         </div>
                     </td>
                 </tr>
+                <tr>
+                    <th scope="row">
+                        <label for="ailseo_gemini_model">
+                            <?php esc_html_e( 'Modelo Gemini', 'ai-internal-links-seo' ); ?>
+                        </label>
+                    </th>
+                    <td>
+                        <select id="ailseo_gemini_model" name="ailseo_gemini_model">
+                            <?php foreach ( $gemini_models as $model_id => $model_label ) : ?>
+                                <option value="<?php echo esc_attr( $model_id ); ?>" <?php selected( $gemini_model, $model_id ); ?>>
+                                    <?php echo esc_html( $model_label ); ?>
+                                </option>
+                            <?php endforeach; ?>
+                        </select>
+                        <p class="description">
+                            <?php esc_html_e( 'O Gemini 2.5 Flash é o padrão recomendado. Modelos Preview podem mudar ou ser removidos pela API.', 'ai-internal-links-seo' ); ?>
+                        </p>
+                    </td>
+                </tr>
             </table>
         </div>
 

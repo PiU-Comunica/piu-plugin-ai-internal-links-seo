@@ -223,7 +223,7 @@ class Analyzer {
         );
 
         foreach ( $suggestions as $suggestion ) {
-            // Verificar se já existe uma sugestão similar aplicada
+            // Verificar se já existe uma sugestão aplicada para este destino.
             // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
             $existing = $wpdb->get_var(
                 $wpdb->prepare(
@@ -238,6 +238,26 @@ class Analyzer {
 
             if ( $existing ) {
                 continue; // Já existe link aplicado para este destino
+            }
+
+            // Evitar recriar sugestões iguais que já foram rejeitadas.
+            // Mantém o histórico de rejeição sem poluir a lista em novas análises.
+            // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
+            $rejected = $wpdb->get_var(
+                $wpdb->prepare(
+                    "SELECT id FROM $table_name
+                    WHERE post_id = %d
+                    AND target_post_id = %d
+                    AND suggested_anchor = %s
+                    AND status = 'rejected'",
+                    $post_id,
+                    $suggestion['target_post_id'],
+                    $suggestion['anchor_text']
+                )
+            );
+
+            if ( $rejected ) {
+                continue;
             }
 
             // Inserir nova sugestão

@@ -136,9 +136,10 @@ class Plugin {
 
         // Obter API Key do POST (permite testar antes de salvar)
         $api_key = isset( $_POST['api_key'] ) ? sanitize_text_field( wp_unslash( $_POST['api_key'] ) ) : '';
+        $model   = isset( $_POST['model'] ) ? AI_Client::sanitize_model( wp_unslash( $_POST['model'] ) ) : '';
 
         // Testar conexão (passa a chave temporariamente)
-        $result = $this->ai_client->test_connection( $api_key );
+        $result = $this->ai_client->test_connection( $api_key, $model );
 
         if ( $result['success'] ) {
             wp_send_json_success( array(

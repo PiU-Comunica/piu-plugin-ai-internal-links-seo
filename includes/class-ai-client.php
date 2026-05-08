@@ -20,11 +20,18 @@ if ( ! defined( 'ABSPATH' ) ) {
 class AI_Client {
 
     /**
-     * URL base da API Gemini
+     * URL base da API Gemini.
      *
      * @var string
      */
-    const GEMINI_API_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent';
+    const GEMINI_API_BASE_URL = 'https://generativelanguage.googleapis.com/v1beta/models/';
+
+    /**
+     * Modelo padrão da API Gemini.
+     *
+     * @var string
+     */
+    const DEFAULT_GEMINI_MODEL = 'gemini-2.5-flash';
 
     /**
      * Timeout para requisições em segundos
@@ -41,21 +48,60 @@ class AI_Client {
     private $api_key;
 
     /**
+     * Modelo Gemini selecionado.
+     *
+     * @var string
+     */
+    private $model;
+
+    /**
      * Construtor
      */
     public function __construct() {
         $this->api_key = get_option( 'ailseo_api_key', '' );
+        $this->model   = self::sanitize_model( get_option( 'ailseo_gemini_model', self::DEFAULT_GEMINI_MODEL ) );
+    }
+
+    /**
+     * Obter modelos Gemini suportados pelo plugin.
+     *
+     * @return array Modelos no formato model_id => label.
+     */
+    public static function get_available_models() {
+        return array(
+            'gemini-2.5-flash'       => __( 'Gemini 2.5 Flash (recomendado)', 'ai-internal-links-seo' ),
+            'gemini-3.1-flash-lite'  => __( 'Gemini 3.1 Flash-Lite (mais rápido e econômico)', 'ai-internal-links-seo' ),
+            'gemini-3-flash-preview' => __( 'Gemini 3 Flash Preview (mais novo, sujeito a mudanças)', 'ai-internal-links-seo' ),
+        );
+    }
+
+    /**
+     * Sanitizar modelo selecionado.
+     *
+     * @param string $model Modelo informado.
+     * @return string Modelo válido.
+     */
+    public static function sanitize_model( $model ) {
+        $model = sanitize_text_field( $model );
+
+        if ( array_key_exists( $model, self::get_available_models() ) ) {
+            return $model;
+        }
+
+        return self::DEFAULT_GEMINI_MODEL;
     }
 
     /**
      * Testar conexão com a API
      *
      * @param string $temp_api_key API Key temporária para teste (opcional).
+     * @param string $temp_model   Modelo temporário para teste (opcional).
      * @return array Resultado do teste.
      */
-    public function test_connection( $temp_api_key = '' ) {
+    public function test_connection( $temp_api_key = '', $temp_model = '' ) {
         // Usar chave temporária se fornecida, senão usar a armazenada
         $api_key = ! empty( $temp_api_key ) ? $temp_api_key : $this->api_key;
+        $model   = ! empty( $temp_model ) ? self::sanitize_model( $temp_model ) : $this->model;
 
         if ( empty( $api_key ) ) {
             return array(
@@ -65,7 +111,7 @@ class AI_Client {
         }
 
         // Fazer requisição de teste simples com a chave fornecida
-        $response = $this->send_request( 'Olá, responda apenas com "OK" se você recebeu esta mensagem.', $api_key );
+        $response = $this->send_request( 'Olá, responda apenas com "OK" se você recebeu esta mensagem.', $api_key, $model );
 
         if ( is_wp_error( $response ) ) {
             return array(
@@ -190,15 +236,17 @@ PROMPT;
     /**
      * Enviar requisição para a API
      *
-     * @param string $prompt      Prompt a ser enviado.
+     * @param string $prompt       Prompt a ser enviado.
      * @param string $temp_api_key API Key temporária (opcional).
+     * @param string $temp_model   Modelo temporário (opcional).
      * @return string|WP_Error Resposta da API ou erro.
      */
-    private function send_request( $prompt, $temp_api_key = '' ) {
+    private function send_request( $prompt, $temp_api_key = '', $temp_model = '' ) {
         // Usar chave temporária se fornecida, senão usar a armazenada
         $api_key = ! empty( $temp_api_key ) ? $temp_api_key : $this->api_key;
+        $model   = ! empty( $temp_model ) ? self::sanitize_model( $temp_model ) : $this->model;
 
-        $url = self::GEMINI_API_URL . '?key=' . $api_key;
+        $url = self::GEMINI_API_BASE_URL . rawurlencode( $model ) . ':generateContent?key=' . rawurlencode( $api_key );
 
         $body = array(
             'contents' => array(

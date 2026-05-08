@@ -12,6 +12,23 @@ if ( ! defined( 'ABSPATH' ) ) {
 
 // Calcular total de páginas
 $total_pages = ceil( $total / $per_page );
+
+// Agrupar sugestões por post de origem para facilitar a revisão.
+$suggestions_by_post = array();
+
+foreach ( $suggestions as $suggestion ) {
+    $post_id = (int) $suggestion['post_id'];
+
+    if ( ! isset( $suggestions_by_post[ $post_id ] ) ) {
+        $suggestions_by_post[ $post_id ] = array(
+            'post_id'      => $post_id,
+            'source_title' => $suggestion['source_title'],
+            'suggestions'  => array(),
+        );
+    }
+
+    $suggestions_by_post[ $post_id ]['suggestions'][] = $suggestion;
+}
 ?>
 
 <div class="wrap ailseo-wrap">
@@ -59,9 +76,29 @@ $total_pages = ceil( $total / $per_page );
     <!-- Lista de Sugestões -->
     <?php if ( ! empty( $suggestions ) ) : ?>
         <div class="ailseo-suggestions-list">
-            <?php foreach ( $suggestions as $suggestion ) : ?>
-                <div class="ailseo-suggestion-card status-<?php echo esc_attr( $suggestion['status'] ); ?>"
-                     data-suggestion-id="<?php echo esc_attr( $suggestion['id'] ); ?>">
+            <?php foreach ( $suggestions_by_post as $post_group ) : ?>
+                <div class="ailseo-post-suggestions-group">
+                    <div class="ailseo-post-suggestions-header">
+                        <div>
+                            <strong><?php esc_html_e( 'Post de Origem:', 'ai-internal-links-seo' ); ?></strong>
+                            <a href="<?php echo esc_url( get_edit_post_link( $post_group['post_id'] ) ); ?>" target="_blank">
+                                <?php echo esc_html( $post_group['source_title'] ); ?>
+                            </a>
+                        </div>
+                        <span class="ailseo-post-suggestions-count">
+                            <?php
+                            printf(
+                                /* translators: %d: number of suggestions */
+                                esc_html( _n( '%d sugestão', '%d sugestões', count( $post_group['suggestions'] ), 'ai-internal-links-seo' ) ),
+                                count( $post_group['suggestions'] )
+                            );
+                            ?>
+                        </span>
+                    </div>
+
+                    <?php foreach ( $post_group['suggestions'] as $suggestion ) : ?>
+                        <div class="ailseo-suggestion-card status-<?php echo esc_attr( $suggestion['status'] ); ?>"
+                             data-suggestion-id="<?php echo esc_attr( $suggestion['id'] ); ?>">
 
                     <!-- Cabeçalho -->
                     <div class="ailseo-suggestion-header">
@@ -95,15 +132,6 @@ $total_pages = ceil( $total / $per_page );
                     <!-- Informações do Link -->
                     <div class="ailseo-suggestion-info">
                         <div class="ailseo-suggestion-posts">
-                            <div class="ailseo-suggestion-source">
-                                <strong><?php esc_html_e( 'Post de Origem:', 'ai-internal-links-seo' ); ?></strong>
-                                <a href="<?php echo esc_url( get_edit_post_link( $suggestion['post_id'] ) ); ?>" target="_blank">
-                                    <?php echo esc_html( $suggestion['source_title'] ); ?>
-                                </a>
-                            </div>
-                            <div class="ailseo-suggestion-arrow">
-                                <span class="dashicons dashicons-arrow-right-alt"></span>
-                            </div>
                             <div class="ailseo-suggestion-target">
                                 <strong><?php esc_html_e( 'Link para:', 'ai-internal-links-seo' ); ?></strong>
                                 <a href="<?php echo esc_url( get_permalink( $suggestion['target_post_id'] ) ); ?>" target="_blank">
@@ -180,6 +208,8 @@ $total_pages = ceil( $total / $per_page );
                             </span>
                         <?php endif; ?>
                     </div>
+                        </div>
+                    <?php endforeach; ?>
                 </div>
             <?php endforeach; ?>
         </div>

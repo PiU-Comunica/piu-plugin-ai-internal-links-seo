@@ -85,7 +85,15 @@ Mantenha estes padrões em qualquer alteração:
 
 ## Integração com IA
 
-`AI_Client::GEMINI_API_URL` aponta para `gemini-2.0-flash:generateContent`.
+`AI_Client` monta a URL da API Gemini usando `GEMINI_API_BASE_URL` e o modelo salvo em `ailseo_gemini_model`.
+
+Modelos suportados atualmente:
+
+- `gemini-2.5-flash` como padrão recomendado.
+- `gemini-3.1-flash-lite` para menor custo e latência.
+- `gemini-3-flash-preview` para testar a geração mais recente, com risco maior de mudanças na API.
+
+Não reintroduza `gemini-2.0-flash`; ele foi removido por estar depreciado na documentação atual da Gemini API.
 
 Ao alterar prompts ou parsing:
 

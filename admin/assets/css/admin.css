@@ -299,11 +299,34 @@
     margin-top: 20px;
 }
 
-.ailseo-suggestion-card {
+.ailseo-post-suggestions-group {
     background: #fff;
     border: 1px solid #ccd0d4;
     border-radius: 4px;
-    margin-bottom: 20px;
+    margin-bottom: 24px;
+    overflow: hidden;
+}
+
+.ailseo-post-suggestions-header {
+    background: #f6f7f7;
+    border-bottom: 1px solid #ccd0d4;
+    display: flex;
+    justify-content: space-between;
+    gap: 15px;
+    padding: 15px 20px;
+}
+
+.ailseo-post-suggestions-count {
+    color: #646970;
+    white-space: nowrap;
+}
+
+.ailseo-suggestion-card {
+    background: #fff;
+    border: 0;
+    border-top: 1px solid #eee;
+    border-radius: 0;
+    margin-bottom: 0;
     overflow: hidden;
 }
 
@@ -660,6 +683,14 @@
     .ailseo-suggestion-posts {
         flex-direction: column;
         align-items: flex-start;
+    }
+
+    .ailseo-post-suggestions-header {
+        flex-direction: column;
+    }
+
+    .ailseo-post-suggestions-count {
+        white-space: normal;
     }
 
     .ailseo-suggestion-arrow {

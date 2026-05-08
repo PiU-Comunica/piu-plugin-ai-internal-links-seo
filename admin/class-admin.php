@@ -133,6 +133,17 @@ class Admin {
             )
         );
 
+        // Modelo Gemini
+        register_setting(
+            'ailseo_settings',
+            'ailseo_gemini_model',
+            array(
+                'type'              => 'string',
+                'sanitize_callback' => array( AI_Client::class, 'sanitize_model' ),
+                'default'           => AI_Client::DEFAULT_GEMINI_MODEL,
+            )
+        );
+
         // Post Types
         register_setting(
             'ailseo_settings',
@@ -372,6 +383,8 @@ class Admin {
 
         // Obter configurações atuais
         $api_key          = get_option( 'ailseo_api_key', '' );
+        $gemini_model     = AI_Client::sanitize_model( get_option( 'ailseo_gemini_model', AI_Client::DEFAULT_GEMINI_MODEL ) );
+        $gemini_models    = AI_Client::get_available_models();
         $selected_types   = get_option( 'ailseo_post_types', array( 'post' ) );
         $max_links        = get_option( 'ailseo_max_links_per_post', 3 );
         $min_score        = get_option( 'ailseo_min_confidence_score', 70 );
