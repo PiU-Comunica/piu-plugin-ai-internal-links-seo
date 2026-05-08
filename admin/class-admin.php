@@ -310,6 +310,13 @@ class Admin {
         // phpcs:ignore WordPress.Security.NonceVerification.Recommended
         $filter_category = isset( $_GET['category'] ) ? absint( $_GET['category'] ) : 0;
 
+        // Ordenação por data
+        // phpcs:ignore WordPress.Security.NonceVerification.Recommended
+        $order = isset( $_GET['order'] ) ? strtoupper( sanitize_text_field( wp_unslash( $_GET['order'] ) ) ) : 'DESC';
+        if ( ! in_array( $order, array( 'ASC', 'DESC' ), true ) ) {
+            $order = 'DESC';
+        }
+
         // Query de posts
         $args = array(
             'post_type'      => ! empty( $filter_post_type ) ? $filter_post_type : $post_types,
@@ -317,7 +324,7 @@ class Admin {
             'posts_per_page' => 20,
             'paged'          => $paged,
             'orderby'        => 'date',
-            'order'          => 'DESC',
+            'order'          => $order,
         );
 
         if ( $filter_category ) {

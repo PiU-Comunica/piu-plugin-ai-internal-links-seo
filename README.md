@@ -185,6 +185,10 @@ Os logs são salvos em `wp-content/debug.log` com prefixo `[AI Internal Links SE
 
 ## Changelog
 
+### 1.3.0
+
+- Coluna **Data** da página *Analisar Posts* agora é clicável e permite ordenar do mais novo para o mais antigo ou do mais antigo para o mais novo
+
 ### 1.2.0
 
 - Editores agora podem acessar Dashboard, Analisar Posts e Sugestões (capability `edit_others_posts`)

@@ -2,7 +2,7 @@
 # This file is distributed under the same license as the AI Internal Links SEO plugin.
 msgid ""
 msgstr ""
-"Project-Id-Version: AI Internal Links SEO 1.2.0\n"
+"Project-Id-Version: AI Internal Links SEO 1.3.0\n"
 "Report-Msgid-Bugs-To: https://agenciapiu.com.br\n"
 "POT-Creation-Date: 2024-01-01 00:00+0000\n"
 "MIME-Version: 1.0\n"
@@ -86,6 +86,14 @@ msgstr ""
 
 #: admin/views/analysis.php
 msgid "Data"
+msgstr ""
+
+#: admin/views/analysis.php
+msgid "Ordenado por data, do mais antigo para o mais novo. Clique para inverter."
+msgstr ""
+
+#: admin/views/analysis.php
+msgid "Ordenado por data, do mais novo para o mais antigo. Clique para inverter."
 msgstr ""
 
 #: admin/views/analysis.php

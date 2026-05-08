@@ -61,6 +61,8 @@ $categories = get_categories( array( 'hide_empty' => false ) );
                 <?php endforeach; ?>
             </select>
 
+            <input type="hidden" name="order" value="<?php echo esc_attr( $order ); ?>">
+
             <button type="submit" class="button">
                 <?php esc_html_e( 'Filtrar', 'ai-internal-links-seo' ); ?>
             </button>
@@ -75,7 +77,25 @@ $categories = get_categories( array( 'hide_empty' => false ) );
                     <tr>
                         <th class="column-title"><?php esc_html_e( 'Título', 'ai-internal-links-seo' ); ?></th>
                         <th class="column-type"><?php esc_html_e( 'Tipo', 'ai-internal-links-seo' ); ?></th>
-                        <th class="column-date"><?php esc_html_e( 'Data', 'ai-internal-links-seo' ); ?></th>
+                        <?php
+                        $next_order      = ( 'ASC' === $order ) ? 'DESC' : 'ASC';
+                        $sort_url        = add_query_arg(
+                            array(
+                                'order' => $next_order,
+                                'paged' => 1,
+                            )
+                        );
+                        $sort_indicator  = ( 'ASC' === $order ) ? '&uarr;' : '&darr;';
+                        $sort_aria_label = ( 'ASC' === $order )
+                            ? esc_attr__( 'Ordenado por data, do mais antigo para o mais novo. Clique para inverter.', 'ai-internal-links-seo' )
+                            : esc_attr__( 'Ordenado por data, do mais novo para o mais antigo. Clique para inverter.', 'ai-internal-links-seo' );
+                        ?>
+                        <th class="column-date ailseo-sortable">
+                            <a href="<?php echo esc_url( $sort_url ); ?>" aria-label="<?php echo esc_attr( $sort_aria_label ); ?>">
+                                <span><?php esc_html_e( 'Data', 'ai-internal-links-seo' ); ?></span>
+                                <span class="ailseo-sort-arrow" aria-hidden="true"><?php echo wp_kses( $sort_indicator, array() ); ?></span>
+                            </a>
+                        </th>
                         <th class="column-suggestions"><?php esc_html_e( 'Sugestões', 'ai-internal-links-seo' ); ?></th>
                         <th class="column-actions"><?php esc_html_e( 'Ações', 'ai-internal-links-seo' ); ?></th>
                     </tr>

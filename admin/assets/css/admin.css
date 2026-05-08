@@ -712,3 +712,23 @@
         width: 100%;
     }
 }
+
+/* Cabeçalho de coluna ordenável (Analisar Posts) */
+th.ailseo-sortable a {
+    text-decoration: none;
+    color: inherit;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+}
+
+th.ailseo-sortable a:hover .ailseo-sort-arrow,
+th.ailseo-sortable a:focus .ailseo-sort-arrow {
+    color: #2271b1;
+}
+
+.ailseo-sort-arrow {
+    color: #50575e;
+    font-size: 12px;
+    line-height: 1;
+}
