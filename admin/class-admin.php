@@ -70,7 +70,7 @@ class Admin {
         add_menu_page(
             __( 'AI Internal Links', 'ai-internal-links-seo' ),
             __( 'AI Internal Links', 'ai-internal-links-seo' ),
-            'manage_options',
+            'edit_others_posts',
             'ailseo-dashboard',
             array( $this, 'render_dashboard_page' ),
             'dashicons-admin-links',
@@ -82,7 +82,7 @@ class Admin {
             'ailseo-dashboard',
             __( 'Dashboard', 'ai-internal-links-seo' ),
             __( 'Dashboard', 'ai-internal-links-seo' ),
-            'manage_options',
+            'edit_others_posts',
             'ailseo-dashboard',
             array( $this, 'render_dashboard_page' )
         );
@@ -92,7 +92,7 @@ class Admin {
             'ailseo-dashboard',
             __( 'Analisar Posts', 'ai-internal-links-seo' ),
             __( 'Analisar Posts', 'ai-internal-links-seo' ),
-            'manage_options',
+            'edit_others_posts',
             'ailseo-analysis',
             array( $this, 'render_analysis_page' )
         );
@@ -102,7 +102,7 @@ class Admin {
             'ailseo-dashboard',
             __( 'Sugestões', 'ai-internal-links-seo' ),
             __( 'Sugestões', 'ai-internal-links-seo' ),
-            'manage_options',
+            'edit_others_posts',
             'ailseo-suggestions',
             array( $this, 'render_suggestions_page' )
         );
@@ -279,7 +279,7 @@ class Admin {
      */
     public function render_dashboard_page() {
         // Verificar permissões
-        if ( ! current_user_can( 'manage_options' ) ) {
+        if ( ! current_user_can( 'edit_others_posts' ) ) {
             wp_die( esc_html__( 'Você não tem permissão para acessar esta página.', 'ai-internal-links-seo' ) );
         }
 
@@ -294,7 +294,7 @@ class Admin {
      */
     public function render_analysis_page() {
         // Verificar permissões
-        if ( ! current_user_can( 'manage_options' ) ) {
+        if ( ! current_user_can( 'edit_others_posts' ) ) {
             wp_die( esc_html__( 'Você não tem permissão para acessar esta página.', 'ai-internal-links-seo' ) );
         }
 
@@ -334,7 +334,7 @@ class Admin {
      */
     public function render_suggestions_page() {
         // Verificar permissões
-        if ( ! current_user_can( 'manage_options' ) ) {
+        if ( ! current_user_can( 'edit_others_posts' ) ) {
             wp_die( esc_html__( 'Você não tem permissão para acessar esta página.', 'ai-internal-links-seo' ) );
         }
 

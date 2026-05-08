@@ -167,7 +167,7 @@ Registra ações para auditoria:
 
 - API Keys armazenadas de forma segura com `wp_options`
 - Verificação de nonces em todos os formulários
-- Verificação de capabilities (`manage_options`)
+- Verificação de capabilities (`manage_options` para Configurações; `edit_others_posts` para gestão de sugestões)
 - Sanitização de todos os inputs
 - Escape de todos os outputs
 - Prepared statements para queries SQL
@@ -184,6 +184,11 @@ define( 'WP_DEBUG_LOG', true );
 Os logs são salvos em `wp-content/debug.log` com prefixo `[AI Internal Links SEO]`.
 
 ## Changelog
+
+### 1.2.0
+
+- Editores agora podem acessar Dashboard, Analisar Posts e Sugestões (capability `edit_others_posts`)
+- Página de Configurações e teste de conexão com a API continuam restritos a administradores (`manage_options`), preservando o sigilo da API Key
 
 ### 1.1.3
 

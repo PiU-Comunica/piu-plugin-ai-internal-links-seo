@@ -163,7 +163,7 @@ class Plugin {
         check_ajax_referer( 'ailseo_nonce', 'nonce' );
 
         // Verificar permissões
-        if ( ! current_user_can( 'manage_options' ) ) {
+        if ( ! current_user_can( 'edit_others_posts' ) ) {
             wp_send_json_error( array(
                 'message' => __( 'Permissão negada.', 'ai-internal-links-seo' ),
             ) );
@@ -201,7 +201,7 @@ class Plugin {
         check_ajax_referer( 'ailseo_nonce', 'nonce' );
 
         // Verificar permissões
-        if ( ! current_user_can( 'manage_options' ) ) {
+        if ( ! current_user_can( 'edit_others_posts' ) ) {
             wp_send_json_error( array(
                 'message' => __( 'Permissão negada.', 'ai-internal-links-seo' ),
             ) );
@@ -238,7 +238,7 @@ class Plugin {
         check_ajax_referer( 'ailseo_nonce', 'nonce' );
 
         // Verificar permissões
-        if ( ! current_user_can( 'manage_options' ) ) {
+        if ( ! current_user_can( 'edit_others_posts' ) ) {
             wp_send_json_error( array(
                 'message' => __( 'Permissão negada.', 'ai-internal-links-seo' ),
             ) );
@@ -275,7 +275,7 @@ class Plugin {
         check_ajax_referer( 'ailseo_nonce', 'nonce' );
 
         // Verificar permissões
-        if ( ! current_user_can( 'manage_options' ) ) {
+        if ( ! current_user_can( 'edit_others_posts' ) ) {
             wp_send_json_error( array(
                 'message' => __( 'Permissão negada.', 'ai-internal-links-seo' ),
             ) );
@@ -319,7 +319,7 @@ class Plugin {
         check_ajax_referer( 'ailseo_nonce', 'nonce' );
 
         // Verificar permissões
-        if ( ! current_user_can( 'manage_options' ) ) {
+        if ( ! current_user_can( 'edit_others_posts' ) ) {
             wp_send_json_error( array(
                 'message' => __( 'Permissão negada.', 'ai-internal-links-seo' ),
             ) );
@@ -354,7 +354,7 @@ class Plugin {
     public function ajax_restore_suggestion() {
         check_ajax_referer( 'ailseo_nonce', 'nonce' );
 
-        if ( ! current_user_can( 'manage_options' ) ) {
+        if ( ! current_user_can( 'edit_others_posts' ) ) {
             wp_send_json_error( array(
                 'message' => __( 'Permissão negada.', 'ai-internal-links-seo' ),
             ) );

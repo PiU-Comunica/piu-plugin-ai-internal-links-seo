@@ -100,7 +100,7 @@ O plugin possui uma opção em **AI Internal Links > Configurações** para remo
 Mantenha estes padrões em qualquer alteração:
 
 - Todos os handlers AJAX devem validar nonce com `check_ajax_referer( 'ailseo_nonce', 'nonce' )`.
-- Ações administrativas devem exigir `current_user_can( 'manage_options' )`.
+- Configurações e teste de API devem exigir `current_user_can( 'manage_options' )`. Demais ações de gestão de sugestões (analisar, listar, aplicar, rejeitar, desfazer, restaurar) devem exigir `current_user_can( 'edit_others_posts' )` para permitir uso por editores.
 - Dados vindos de `$_GET` e `$_POST` devem ser tratados com `wp_unslash` e sanitizados.
 - Queries com valores dinâmicos devem usar `$wpdb->prepare`.
 - Saídas em views devem ser escapadas no contexto correto.

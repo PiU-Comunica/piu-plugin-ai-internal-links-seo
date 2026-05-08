@@ -18,7 +18,7 @@ Diretrizes para o Claude Code trabalhando neste plugin. Use este arquivo em conj
 
 1. **Não altere conteúdo de post** fora de `Link_Applier`. Mudanças em `apply_suggestion` / `undo_suggestion` são sensíveis: preservam `paragraph_context` e `paragraph_modified` para permitir rollback.
 2. **Status válidos**: `pending`, `applied`, `rejected`. Se introduzir um novo, atualize a view, o JS, o changelog e o AGENTS.md.
-3. **AJAX**: todo handler precisa de `check_ajax_referer( 'ailseo_nonce', 'nonce' )` + `current_user_can( 'manage_options' )`.
+3. **AJAX**: todo handler precisa de `check_ajax_referer( 'ailseo_nonce', 'nonce' )`. Capability: `manage_options` apenas para Configurações e teste de API; demais ações (analisar, listar/aplicar/rejeitar/desfazer/restaurar sugestões) usam `edit_others_posts` para permitir uso por editores.
 4. **i18n**: text domain `ai-internal-links-seo`. Strings novas → adicione em `languages/ai-internal-links-seo.pot`.
 5. **Strings JS**: passe via `wp_localize_script` em `admin/class-admin.php` (chave `i18n`), nunca hardcode em `admin.js`.
 6. **Versão**: ao adicionar funcionalidade, suba `Version:` no header do plugin **e** `AILSEO_VERSION` em `ai-internal-links-seo.php`. SemVer: patch (`x.y.Z`) para bugfix, minor (`x.Y.0`) para feature nova compatível, major (`X.0.0`) para breaking change. Atualize também o changelog em `README.md` e o `Project-Id-Version` no `.pot`.
