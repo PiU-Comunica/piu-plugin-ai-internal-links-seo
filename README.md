@@ -56,7 +56,7 @@ Modelos disponiveis nas configuracoes:
 ### 3. Revisar Sugestoes
 
 - Acesse **AI Internal Links > Sugestoes**
-- Revise cada sugestao de link
+- Revise as sugestoes agrupadas por post de origem
 - Veja o contexto (paragrafo onde o link sera inserido)
 - Confira a justificativa da IA
 - Veja o score de confianca
@@ -82,6 +82,7 @@ Modelos disponiveis nas configuracoes:
 
 ### Gerenciamento de Sugestoes
 - Filtro por status (pendentes, aplicadas, rejeitadas)
+- Sugestoes exibidas em grupos por post de origem
 - Preview do paragrafo com texto ancora destacado
 - Justificativa da IA para cada sugestao
 - Score de confianca
@@ -116,8 +117,10 @@ Armazena as sugestoes de links:
 - ID do post de destino
 - Contexto do paragrafo
 - Score de confianca
-- Status (pending, approved, rejected, applied)
+- Status (pending, rejected, applied)
 - Data de criacao e aplicacao
+
+Ao reanalisar um post, sugestoes pendentes antigas do mesmo post sao removidas antes de salvar as novas. Sugestoes aplicadas e rejeitadas sao preservadas; sugestoes iguais ja rejeitadas para o mesmo post, destino e texto ancora nao sao recriadas.
 
 ### wp_ailseo_log
 Registra acoes para auditoria:

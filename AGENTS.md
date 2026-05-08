@@ -58,6 +58,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 7. `AI_Client` envia o prompt para o Gemini e espera JSON válido.
 8. Sugestões válidas são gravadas em `wp_ailseo_suggestions`.
 9. `Link_Applier` aplica, rejeita ou desfaz a sugestão, atualizando o post e registrando log.
+10. A tela de sugestões agrupa os cards por post de origem, mantendo ações individuais por sugestão.
 
 ## Banco de Dados
 
@@ -70,7 +71,8 @@ Cuidados:
 
 - Alterações de schema devem passar por `dbDelta`.
 - Atualize `AILSEO_VERSION` e `ailseo_db_version` quando houver migração real.
-- Ao mexer em status, considere os estados atualmente usados: `pending`, `applied` e `rejected`. O README também cita `approved`, mas o fluxo atual não usa esse estado.
+- Ao mexer em status, considere os estados atualmente usados: `pending`, `applied` e `rejected`.
+- Ao reanalisar um post, `Analyzer::save_suggestions()` remove sugestões `pending` antigas do mesmo post, preserva `applied` e `rejected`, e evita recriar sugestão já rejeitada para a mesma combinação de post de origem, post de destino e texto âncora.
 
 ## Segurança
 
@@ -119,6 +121,7 @@ Ao mexer nessa área:
 - Os ícones são Dashicons, consistentes com o admin do WordPress.
 - Evite dependências JS/CSS externas sem necessidade.
 - Ao criar novos textos em JS, prefira passá-los via `wp_localize_script` para manter tradução.
+- Em `admin/views/suggestions.php`, preserve o agrupamento por post de origem e mantenha os botões com `data-suggestion-id`, pois o JavaScript ainda processa cada sugestão individualmente.
 
 ## Internacionalização
 
