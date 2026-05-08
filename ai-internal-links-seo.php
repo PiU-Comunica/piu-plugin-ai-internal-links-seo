@@ -14,7 +14,6 @@
  * Requires PHP: 7.4
  * GitHub Plugin URI: PiU-Comunica/piu-plugin-ai-internal-links-seo
  * Primary Branch: main
- * Release Asset: true
  *
  * @package AIInternalLinksSEO
  */
