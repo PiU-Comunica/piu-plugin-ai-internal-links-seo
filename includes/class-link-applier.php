@@ -101,9 +101,9 @@ class Link_Applier {
             );
         }
 
-        // Criar o link
+        // Criar o link (abre em nova aba, com rel seguros).
         $link = sprintf(
-            '<a href="%s" title="%s">%s</a>',
+            '<a href="%s" title="%s" target="_blank" rel="noopener noreferrer">%s</a>',
             esc_url( $target_url ),
             esc_attr( get_the_title( $suggestion['target_post_id'] ) ),
             esc_html( $anchor_text )

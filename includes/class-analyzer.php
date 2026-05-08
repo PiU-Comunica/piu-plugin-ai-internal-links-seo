@@ -63,11 +63,18 @@ class Analyzer {
 
         $this->log( 'Iniciando análise do post: ' . $post_id );
 
-        // Preparar dados do post atual
+        // Preparar dados do post atual (com parágrafos e taxonomias)
         $current_post = $this->prepare_post_data( $post );
 
-        // Obter posts disponíveis para linking
-        $available_posts = $this->get_available_posts( $post_id );
+        // Posts já vinculados (HTML do post + base de sugestões applied/rejected).
+        $existing_target_ids = isset( $current_post['existing_target_ids'] ) ? (array) $current_post['existing_target_ids'] : array();
+        $excluded_target_ids = array_values( array_unique( array_merge(
+            $this->get_excluded_target_ids( $post_id ),
+            $existing_target_ids
+        ) ) );
+
+        // Obter posts candidatos pré-filtrados por relevância
+        $available_posts = $this->get_available_posts( $post_id, $current_post, $excluded_target_ids );
 
         if ( empty( $available_posts ) ) {
             return array(
@@ -117,45 +124,248 @@ class Analyzer {
     }
 
     /**
+     * Limite de palavras do conteúdo enviado à IA.
+     *
+     * @var int
+     */
+    const MAX_CONTENT_WORDS = 4000;
+
+    /**
+     * Comprimento mínimo (caracteres) para um parágrafo ser enviado à IA.
+     *
+     * @var int
+     */
+    const MIN_PARAGRAPH_LENGTH = 40;
+
+    /**
+     * Quantidade máxima de candidatos enviados à IA após pré-filtragem.
+     *
+     * @var int
+     */
+    const MAX_CANDIDATES = 15;
+
+    /**
      * Preparar dados do post para envio à IA
      *
      * @param \WP_Post $post Objeto do post.
      * @return array Dados preparados.
      */
     private function prepare_post_data( $post ) {
-        // Remover shortcodes e limpar HTML
-        $content = $post->post_content;
-        $content = strip_shortcodes( $content );
-        $content = wp_strip_all_tags( $content, true );
-        $content = preg_replace( '/\s+/', ' ', $content );
-        $content = trim( $content );
+        $content = strip_shortcodes( $post->post_content );
+
+        // Antes de remover HTML, extrair links já existentes no post.
+        $existing_links = $this->extract_existing_links( $content );
+
+        // Quebrar em parágrafos preservando estrutura antes de remover HTML.
+        // Considera blocos comuns (<p>, <h*>, <li>, <blockquote>) como separadores.
+        $blocks = preg_split(
+            '/<\s*\/(?:p|h[1-6]|li|blockquote|div)\s*>|<br\s*\/?>|\n\s*\n/i',
+            $content
+        );
+
+        $paragraphs = array();
+        $word_count = 0;
+
+        foreach ( (array) $blocks as $block ) {
+            $text = wp_strip_all_tags( $block, true );
+            $text = preg_replace( '/\s+/', ' ', $text );
+            $text = trim( $text );
+
+            if ( '' === $text || mb_strlen( $text ) < self::MIN_PARAGRAPH_LENGTH ) {
+                continue;
+            }
+
+            $words       = preg_split( '/\s+/', $text );
+            $word_count += count( $words );
+
+            // Cortar se exceder o limite global de palavras.
+            if ( $word_count > self::MAX_CONTENT_WORDS ) {
+                $this->log( 'Conteúdo truncado em ' . self::MAX_CONTENT_WORDS . ' palavras.' );
+                break;
+            }
+
+            $paragraphs[] = $text;
+        }
+
+        // Fallback: se a quebra não rendeu nada, usa o conteúdo inteiro como 1 parágrafo.
+        if ( empty( $paragraphs ) ) {
+            $fallback = preg_replace( '/\s+/', ' ', wp_strip_all_tags( $content, true ) );
+            $fallback = trim( $fallback );
+
+            if ( '' !== $fallback ) {
+                $paragraphs[] = $fallback;
+            }
+        }
 
         return array(
-            'id'      => $post->ID,
-            'title'   => $post->post_title,
-            'content' => $content,
-            'url'     => get_permalink( $post->ID ),
+            'id'                 => $post->ID,
+            'title'              => $post->post_title,
+            'paragraphs'         => $paragraphs,
+            'taxonomies'         => $this->get_post_terms_summary( $post ),
+            'url'                => get_permalink( $post->ID ),
+            'existing_target_ids' => $existing_links['target_ids'],
+            'existing_anchors'   => $existing_links['anchors'],
         );
     }
 
     /**
-     * Obter posts disponíveis para linking
+     * Extrair links existentes do conteúdo HTML do post.
      *
-     * @param int $exclude_post_id ID do post a ser excluído (post atual).
-     * @return array Posts disponíveis.
+     * Resolve URLs de links que apontam para posts internos do site para os IDs
+     * correspondentes, e coleta os textos âncora normalizados em minúsculas.
+     *
+     * @param string $html_content Conteúdo HTML bruto do post.
+     * @return array{ target_ids: int[], anchors: string[] }
      */
-    private function get_available_posts( $exclude_post_id ) {
-        // Obter configurações
+    private function extract_existing_links( $html_content ) {
+        $target_ids = array();
+        $anchors    = array();
+
+        if ( '' === trim( (string) $html_content ) ) {
+            return array( 'target_ids' => $target_ids, 'anchors' => $anchors );
+        }
+
+        if ( preg_match_all( '/<a\s+[^>]*href\s*=\s*["\']([^"\']+)["\'][^>]*>(.*?)<\/a>/is', $html_content, $matches, PREG_SET_ORDER ) ) {
+            foreach ( $matches as $match ) {
+                $url    = trim( html_entity_decode( $match[1], ENT_QUOTES | ENT_HTML5, 'UTF-8' ) );
+                $anchor = trim( wp_strip_all_tags( $match[2] ) );
+
+                if ( '' !== $anchor ) {
+                    $anchors[] = mb_strtolower( $anchor );
+                }
+
+                if ( '' === $url || '#' === $url[0] ) {
+                    continue;
+                }
+
+                $resolved_id = url_to_postid( $url );
+
+                if ( $resolved_id > 0 ) {
+                    $target_ids[] = (int) $resolved_id;
+                }
+            }
+        }
+
+        return array(
+            'target_ids' => array_values( array_unique( $target_ids ) ),
+            'anchors'    => array_values( array_unique( $anchors ) ),
+        );
+    }
+
+    /**
+     * Resumir termos taxonômicos relevantes de um post como string curta.
+     *
+     * @param \WP_Post $post Objeto do post.
+     * @return string Lista separada por vírgulas ou string vazia.
+     */
+    private function get_post_terms_summary( $post ) {
+        $taxonomies = get_object_taxonomies( $post->post_type );
+        $names      = array();
+
+        foreach ( $taxonomies as $taxonomy ) {
+            $tax_obj = get_taxonomy( $taxonomy );
+
+            if ( ! $tax_obj || empty( $tax_obj->public ) ) {
+                continue;
+            }
+
+            $terms = get_the_terms( $post->ID, $taxonomy );
+
+            if ( empty( $terms ) || is_wp_error( $terms ) ) {
+                continue;
+            }
+
+            foreach ( $terms as $term ) {
+                $names[] = $term->name;
+            }
+        }
+
+        $names = array_slice( array_unique( $names ), 0, 10 );
+
+        return implode( ', ', $names );
+    }
+
+    /**
+     * Obter IDs de term taxonômicos do post (para cálculo de overlap).
+     *
+     * @param int    $post_id ID do post.
+     * @param string $post_type Tipo do post.
+     * @return array IDs de termos.
+     */
+    private function get_post_term_ids( $post_id, $post_type ) {
+        $taxonomies = get_object_taxonomies( $post_type );
+        $term_ids   = array();
+
+        foreach ( $taxonomies as $taxonomy ) {
+            $terms = wp_get_post_terms( $post_id, $taxonomy, array( 'fields' => 'ids' ) );
+
+            if ( ! is_wp_error( $terms ) && ! empty( $terms ) ) {
+                $term_ids = array_merge( $term_ids, $terms );
+            }
+        }
+
+        return array_unique( array_map( 'intval', $term_ids ) );
+    }
+
+    /**
+     * Tokens significativos do título para overlap simples.
+     *
+     * @param string $text Texto.
+     * @return array Tokens em minúsculas com >=4 caracteres.
+     */
+    private function tokenize( $text ) {
+        $text   = mb_strtolower( wp_strip_all_tags( (string) $text ) );
+        $text   = preg_replace( '/[^\p{L}\p{N}\s]+/u', ' ', $text );
+        $tokens = preg_split( '/\s+/', trim( (string) $text ) );
+
+        if ( empty( $tokens ) ) {
+            return array();
+        }
+
+        $stopwords = array(
+            'para','como','sobre','dos','das','dum','duma','das','com','por','que',
+            'mais','sem','seu','sua','meu','minha','este','esta','isso','aqui','quando',
+            'onde','tudo','muito','muita','também','foi','são','está','estão','pode',
+            'podem','será','tem','têm','uma','uns','umas','seus','suas','pelo','pela',
+        );
+
+        $filtered = array();
+
+        foreach ( $tokens as $tok ) {
+            if ( mb_strlen( $tok ) < 4 ) {
+                continue;
+            }
+            if ( in_array( $tok, $stopwords, true ) ) {
+                continue;
+            }
+            $filtered[ $tok ] = true;
+        }
+
+        return array_keys( $filtered );
+    }
+
+    /**
+     * Obter posts candidatos a linking, ranqueados por relevância.
+     *
+     * @param int   $exclude_post_id     ID do post atual (a ser excluído).
+     * @param array $current_post        Dados preparados do post atual.
+     * @param array $excluded_target_ids IDs adicionais a excluir (já aplicados/rejeitados).
+     * @return array Posts disponíveis (top N por score).
+     */
+    private function get_available_posts( $exclude_post_id, $current_post, $excluded_target_ids = array() ) {
         $post_types = get_option( 'ailseo_post_types', array( 'post' ) );
 
         if ( empty( $post_types ) ) {
             $post_types = array( 'post' );
         }
 
-        // Verificar cache
+        $exclude_ids = array_unique( array_merge( array( $exclude_post_id ), array_map( 'intval', $excluded_target_ids ) ) );
+
+        // Cache por post (varia conforme exclusões e taxonomias do post atual).
         $cache_key = $this->cache->get_posts_list_key( array(
             'post_types' => $post_types,
-            'exclude'    => $exclude_post_id,
+            'exclude'    => $exclude_ids,
+            'for_post'   => $exclude_post_id,
         ) );
 
         $cached = $this->cache->get( $cache_key );
@@ -164,38 +374,152 @@ class Analyzer {
             return $cached;
         }
 
-        // Buscar posts
-        $args = array(
-            'post_type'      => $post_types,
-            'post_status'    => 'publish',
-            'posts_per_page' => 50, // Limitar para não sobrecarregar a API
-            'post__not_in'   => array( $exclude_post_id ),
-            'orderby'        => 'date',
-            'order'          => 'DESC',
-        );
+        $current_post_obj  = get_post( $exclude_post_id );
+        $current_post_type = $current_post_obj ? $current_post_obj->post_type : 'post';
+        $current_term_ids  = $this->get_post_term_ids( $exclude_post_id, $current_post_type );
+        $title_tokens      = $this->tokenize( $current_post['title'] );
 
-        $query = new \WP_Query( $args );
-        $posts = array();
+        $candidate_ids = array();
 
-        if ( $query->have_posts() ) {
-            while ( $query->have_posts() ) {
-                $query->the_post();
+        // 1) Buscar primeiro posts que compartilham taxonomia com o atual.
+        if ( ! empty( $current_term_ids ) ) {
+            $tax_query = array( 'relation' => 'OR' );
 
-                $posts[] = array(
-                    'id'      => get_the_ID(),
-                    'title'   => get_the_title(),
-                    'excerpt' => get_the_excerpt(),
-                    'url'     => get_permalink(),
+            $taxonomies = get_object_taxonomies( $current_post_type );
+            foreach ( $taxonomies as $taxonomy ) {
+                $term_ids = wp_get_post_terms( $exclude_post_id, $taxonomy, array( 'fields' => 'ids' ) );
+                if ( is_wp_error( $term_ids ) || empty( $term_ids ) ) {
+                    continue;
+                }
+                $tax_query[] = array(
+                    'taxonomy' => $taxonomy,
+                    'field'    => 'term_id',
+                    'terms'    => $term_ids,
                 );
+            }
+
+            if ( count( $tax_query ) > 1 ) {
+                $tax_query_args = array(
+                    'post_type'      => $post_types,
+                    'post_status'    => 'publish',
+                    'posts_per_page' => 60,
+                    'post__not_in'   => $exclude_ids,
+                    'orderby'        => 'date',
+                    'order'          => 'DESC',
+                    'tax_query'      => $tax_query, // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_tax_query
+                    'fields'         => 'ids',
+                    'no_found_rows'  => true,
+                );
+
+                $tax_query_obj = new \WP_Query( $tax_query_args );
+
+                if ( ! empty( $tax_query_obj->posts ) ) {
+                    $candidate_ids = array_map( 'intval', $tax_query_obj->posts );
+                }
             }
         }
 
-        wp_reset_postdata();
+        // 2) Completar com posts recentes para garantir um pool mínimo.
+        if ( count( $candidate_ids ) < self::MAX_CANDIDATES * 2 ) {
+            $extra_excludes = array_unique( array_merge( $exclude_ids, $candidate_ids ) );
 
-        // Salvar no cache
-        $this->cache->set( $cache_key, $posts, HOUR_IN_SECONDS );
+            $recent_query = new \WP_Query( array(
+                'post_type'      => $post_types,
+                'post_status'    => 'publish',
+                'posts_per_page' => self::MAX_CANDIDATES * 2,
+                'post__not_in'   => $extra_excludes,
+                'orderby'        => 'date',
+                'order'          => 'DESC',
+                'fields'         => 'ids',
+                'no_found_rows'  => true,
+            ) );
+
+            if ( ! empty( $recent_query->posts ) ) {
+                $candidate_ids = array_merge( $candidate_ids, array_map( 'intval', $recent_query->posts ) );
+            }
+        }
+
+        $candidate_ids = array_values( array_unique( $candidate_ids ) );
+
+        // 3) Pontuar candidatos.
+        $scored = array();
+
+        foreach ( $candidate_ids as $cid ) {
+            $candidate = get_post( $cid );
+            if ( ! $candidate ) {
+                continue;
+            }
+
+            $cand_term_ids = $this->get_post_term_ids( $cid, $candidate->post_type );
+            $tax_overlap   = count( array_intersect( $current_term_ids, $cand_term_ids ) );
+
+            $cand_title_tokens = $this->tokenize( $candidate->post_title );
+            $title_overlap     = count( array_intersect( $title_tokens, $cand_title_tokens ) );
+
+            // Score: taxonomia pesa mais que título.
+            $score = ( $tax_overlap * 3 ) + ( $title_overlap * 2 );
+
+            $scored[] = array(
+                'id'         => $cid,
+                'post'       => $candidate,
+                'score'      => $score,
+                'tax_terms'  => $cand_term_ids,
+            );
+        }
+
+        usort( $scored, function ( $a, $b ) {
+            if ( $a['score'] === $b['score'] ) {
+                return strtotime( $b['post']->post_date ) <=> strtotime( $a['post']->post_date );
+            }
+            return $b['score'] <=> $a['score'];
+        } );
+
+        $top = array_slice( $scored, 0, self::MAX_CANDIDATES );
+
+        $posts = array();
+
+        foreach ( $top as $entry ) {
+            $cand = $entry['post'];
+
+            $excerpt = has_excerpt( $cand ) ? $cand->post_excerpt : wp_trim_words( wp_strip_all_tags( $cand->post_content ), 25, '...' );
+
+            $posts[] = array(
+                'id'         => $cand->ID,
+                'title'      => $cand->post_title,
+                'excerpt'    => $excerpt,
+                'taxonomies' => $this->get_post_terms_summary( $cand ),
+                'url'        => get_permalink( $cand->ID ),
+            );
+        }
+
+        $this->log( 'Candidatos selecionados: ' . count( $posts ) . ' (pool: ' . count( $candidate_ids ) . ')' );
+
+        $this->cache->set( $cache_key, $posts, 30 * MINUTE_IN_SECONDS );
 
         return $posts;
+    }
+
+    /**
+     * Obter IDs de posts já aplicados ou rejeitados a partir do post atual.
+     *
+     * @param int $post_id ID do post atual.
+     * @return array IDs de posts de destino a serem excluídos.
+     */
+    private function get_excluded_target_ids( $post_id ) {
+        global $wpdb;
+
+        $table_name = $wpdb->prefix . 'ailseo_suggestions';
+
+        // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
+        $rows = $wpdb->get_col(
+            $wpdb->prepare(
+                "SELECT DISTINCT target_post_id FROM $table_name
+                WHERE post_id = %d AND status IN ('applied','rejected')",
+                $post_id
+            )
+        );
+
+        return array_map( 'intval', (array) $rows );
     }
 
     /**

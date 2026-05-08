@@ -127,9 +127,31 @@ class AI_Client {
     }
 
     /**
+     * Parágrafos do post atual indexados (1-based) — preenchidos durante a análise
+     * para que parse_suggestions_response possa resolver paragraph_index → texto.
+     *
+     * @var array
+     */
+    private $current_paragraphs = array();
+
+    /**
+     * IDs de posts que já estão linkados no post atual ou foram rejeitados.
+     *
+     * @var int[]
+     */
+    private $excluded_target_ids = array();
+
+    /**
+     * Âncoras (lowercase) que já são links no post atual e não devem ser usadas.
+     *
+     * @var string[]
+     */
+    private $excluded_anchors = array();
+
+    /**
      * Analisar post e obter sugestões de links
      *
-     * @param array $current_post    Dados do post atual.
+     * @param array $current_post    Dados do post atual (com 'paragraphs').
      * @param array $available_posts Posts disponíveis para linking.
      * @return array|WP_Error Sugestões de links ou erro.
      */
@@ -141,8 +163,27 @@ class AI_Client {
             );
         }
 
+        $paragraphs = isset( $current_post['paragraphs'] ) && is_array( $current_post['paragraphs'] )
+            ? array_values( $current_post['paragraphs'] )
+            : array();
+
+        if ( empty( $paragraphs ) && isset( $current_post['content'] ) ) {
+            // Compatibilidade retroativa caso 'content' seja passado em vez de 'paragraphs'.
+            $paragraphs = array( (string) $current_post['content'] );
+        }
+
+        $this->current_paragraphs = $paragraphs;
+
+        $this->excluded_target_ids = isset( $current_post['existing_target_ids'] )
+            ? array_map( 'intval', (array) $current_post['existing_target_ids'] )
+            : array();
+
+        $this->excluded_anchors = isset( $current_post['existing_anchors'] )
+            ? array_map( 'mb_strtolower', array_map( 'strval', (array) $current_post['existing_anchors'] ) )
+            : array();
+
         // Construir prompt
-        $prompt = $this->build_analysis_prompt( $current_post, $available_posts );
+        $prompt = $this->build_analysis_prompt( $current_post, $available_posts, $paragraphs );
 
         // Enviar requisição
         $response = $this->send_request( $prompt );
@@ -154,6 +195,20 @@ class AI_Client {
         // Processar resposta
         $suggestions = $this->parse_suggestions_response( $response );
 
+        if ( is_wp_error( $suggestions ) ) {
+            $this->log( 'Primeira tentativa retornou JSON inválido. Reenviando prompt com instruções de recuperação.' );
+
+            $retry_response = $this->send_request( $this->build_recovery_prompt( $prompt ) );
+
+            if ( ! is_wp_error( $retry_response ) ) {
+                $retry_suggestions = $this->parse_suggestions_response( $retry_response );
+
+                if ( ! is_wp_error( $retry_suggestions ) ) {
+                    return $retry_suggestions;
+                }
+            }
+        }
+
         return $suggestions;
     }
 
@@ -162,71 +217,101 @@ class AI_Client {
      *
      * @param array $current_post    Dados do post atual.
      * @param array $available_posts Posts disponíveis para linking.
+     * @param array $paragraphs      Parágrafos numerados (1-based no prompt).
      * @return string Prompt formatado.
      */
-    private function build_analysis_prompt( $current_post, $available_posts ) {
-        // Obter configurações
-        $max_links    = get_option( 'ailseo_max_links_per_post', 3 );
-        $min_score    = get_option( 'ailseo_min_confidence_score', 70 );
+    private function build_analysis_prompt( $current_post, $available_posts, $paragraphs ) {
+        $max_links = absint( get_option( 'ailseo_max_links_per_post', 3 ) );
+        $max_links = min( 10, max( 1, $max_links ) );
+        $min_score = absint( get_option( 'ailseo_min_confidence_score', 70 ) );
 
-        // Formatar lista de posts disponíveis
+        // Parágrafos numerados [P1], [P2], ...
+        $numbered_content = '';
+        foreach ( $paragraphs as $idx => $text ) {
+            $numbered_content .= sprintf( "[P%d] %s\n\n", $idx + 1, $text );
+        }
+        $numbered_content = rtrim( $numbered_content );
+
+        // Lista compacta de candidatos.
         $available_posts_text = '';
         foreach ( $available_posts as $post ) {
+            $excerpt    = wp_trim_words( $post['excerpt'], 25, '...' );
+            $taxonomies = isset( $post['taxonomies'] ) ? trim( $post['taxonomies'] ) : '';
+            $tax_part   = '' !== $taxonomies ? sprintf( ' | Categorias/tags: %s', $taxonomies ) : '';
+
             $available_posts_text .= sprintf(
-                "- ID: %d | Título: %s | URL: %s | Resumo: %s\n",
+                "- ID:%d | %s%s | %s\n",
                 $post['id'],
                 $post['title'],
-                $post['url'],
-                wp_trim_words( $post['excerpt'], 30, '...' )
+                $tax_part,
+                $excerpt
             );
         }
 
-        $prompt = <<<PROMPT
-Você é um especialista em SEO e link building interno. Sua tarefa é analisar o conteúdo de um post de blog e identificar oportunidades relevantes para inserir links internos para outros posts do mesmo blog.
+        $current_taxonomies = isset( $current_post['taxonomies'] ) ? trim( $current_post['taxonomies'] ) : '';
+        $current_tax_line   = '' !== $current_taxonomies
+            ? "Categorias/tags do post atual: {$current_taxonomies}\n"
+            : '';
 
-## POST ATUAL PARA ANÁLISE:
+        // Exclusões: posts já linkados/rejeitados e âncoras já usadas como link.
+        $excluded_ids_line = '';
+        if ( ! empty( $this->excluded_target_ids ) ) {
+            $excluded_ids_line = 'IDs proibidos (já linkados ou rejeitados): '
+                . implode( ', ', array_map( 'intval', $this->excluded_target_ids ) )
+                . "\n";
+        }
+
+        $excluded_anchors_line = '';
+        if ( ! empty( $this->excluded_anchors ) ) {
+            $sample = array_slice( $this->excluded_anchors, 0, 30 );
+            $excluded_anchors_line = 'Âncoras proibidas (já são links): "'
+                . implode( '", "', $sample )
+                . "\"\n";
+        }
+
+        $total_paragraphs = count( $paragraphs );
+
+        $prompt = <<<PROMPT
+Tarefa: identificar oportunidades de links internos relevantes em um post.
+
+## POST ATUAL
 
 Título: {$current_post['title']}
+{$current_tax_line}
+Conteúdo (parágrafos numerados de [P1] a [P{$total_paragraphs}]):
 
-Conteúdo:
-{$current_post['content']}
+{$numbered_content}
 
-## POSTS DISPONÍVEIS PARA LINKING:
+## POSTS CANDIDATOS
 
 {$available_posts_text}
 
-## REGRAS IMPORTANTES:
+## EXCLUSÕES
 
-1. Analise cuidadosamente o conteúdo do post atual
-2. Identifique até {$max_links} oportunidades de links internos
-3. Apenas sugira links quando houver relevância semântica clara
-4. O anchor text deve ser natural e fluir com o texto existente
-5. Prefira inserir links em palavras/frases que JÁ EXISTEM no texto
-6. Evite o primeiro parágrafo para inserção de links
-7. Priorize links que agregam valor real ao leitor
-8. O score de confiança deve ser no mínimo {$min_score} para sugerir
-9. NUNCA invente conteúdo - use apenas texto que já existe no post
+{$excluded_ids_line}{$excluded_anchors_line}
+## REGRAS
 
-## FORMATO DE RESPOSTA:
+1. Sugira no máximo {$max_links} links, priorizando alta relevância semântica.
+2. Use APENAS texto âncora que já exista literalmente no parágrafo escolhido.
+3. Não use [P1] (primeiro parágrafo) para inserir links.
+4. Cada link deve ter target_post_id diferente. Não duplique destinos.
+5. Não sugira nenhum target_post_id da lista de IDs proibidos acima.
+6. Não use como anchor_text nenhum trecho da lista de âncoras proibidas (já são links).
+7. Score mínimo aceitável: {$min_score}. Abaixo disso, descarte a sugestão.
+8. Se não houver oportunidades fortes, retorne {"suggestions": []}.
 
-Responda APENAS com um JSON válido no seguinte formato (sem markdown, sem explicações adicionais):
+## RESPOSTA (JSON estrito, sem markdown)
 
 {
     "suggestions": [
         {
-            "paragraph": "texto completo do parágrafo onde inserir o link (copie exatamente como está no post)",
-            "anchor_text": "texto âncora que receberá o link (deve existir no parágrafo)",
+            "paragraph_index": 5,
+            "anchor_text": "trecho exato existente no parágrafo",
             "target_post_id": 123,
-            "position": "inicio|meio|fim",
-            "justification": "explicação breve de por que este link é relevante",
-            "confidence_score": 85
+            "confidence_score": 85,
+            "justification": "máx. 15 palavras"
         }
     ]
-}
-
-Se não houver oportunidades relevantes de links, responda com:
-{
-    "suggestions": []
 }
 PROMPT;
 
@@ -259,10 +344,14 @@ PROMPT;
                 ),
             ),
             'generationConfig' => array(
-                'temperature'     => 0.3,
-                'topK'            => 40,
-                'topP'            => 0.95,
-                'maxOutputTokens' => 2048,
+                'temperature'      => 0.3,
+                'topK'             => 40,
+                'topP'             => 0.95,
+                'maxOutputTokens'  => 4096,
+                'responseMimeType' => 'application/json',
+                'thinkingConfig'   => array(
+                    'thinkingBudget' => 512,
+                ),
             ),
         );
 
@@ -317,7 +406,10 @@ PROMPT;
             );
         }
 
-        $text = $data['candidates'][0]['content']['parts'][0]['text'];
+        $finish_reason = isset( $data['candidates'][0]['finishReason'] ) ? $data['candidates'][0]['finishReason'] : 'unknown';
+        $text          = $data['candidates'][0]['content']['parts'][0]['text'];
+
+        $this->log( 'Finish reason da Gemini: ' . $finish_reason );
         $this->log( 'Resposta recebida com sucesso' );
 
         return $text;
@@ -337,9 +429,16 @@ PROMPT;
         $response = trim( $response );
 
         // Tentar decodificar JSON
-        $data = json_decode( $response, true );
+        $data = $this->decode_json_response( $response );
 
         if ( json_last_error() !== JSON_ERROR_NONE ) {
+            $partial_suggestions = $this->extract_partial_suggestions( $response );
+
+            if ( ! empty( $partial_suggestions ) ) {
+                $this->log( 'JSON truncado. Recuperando sugestoes válidas parciais: ' . count( $partial_suggestions ) );
+                return $partial_suggestions;
+            }
+
             $this->log( 'Erro ao decodificar JSON: ' . json_last_error_msg() );
             $this->log( 'Resposta raw: ' . $response );
 
@@ -358,69 +457,312 @@ PROMPT;
 
         // Validar e limpar sugestões
         $validated_suggestions = array();
+        $seen_targets          = array();
 
         foreach ( $data['suggestions'] as $suggestion ) {
-            if ( $this->validate_suggestion( $suggestion ) ) {
-                $validated_suggestions[] = array(
-                    'paragraph'        => sanitize_textarea_field( $suggestion['paragraph'] ),
-                    'anchor_text'      => sanitize_text_field( $suggestion['anchor_text'] ),
-                    'target_post_id'   => absint( $suggestion['target_post_id'] ),
-                    'position'         => sanitize_text_field( $suggestion['position'] ),
-                    'justification'    => sanitize_textarea_field( $suggestion['justification'] ),
-                    'confidence_score' => min( 100, max( 0, absint( $suggestion['confidence_score'] ) ) ),
-                );
+            $resolved = $this->resolve_suggestion( $suggestion );
+
+            if ( false === $resolved ) {
+                continue;
             }
+
+            // Evitar duplicatas de target no mesmo lote.
+            if ( isset( $seen_targets[ $resolved['target_post_id'] ] ) ) {
+                continue;
+            }
+            $seen_targets[ $resolved['target_post_id'] ] = true;
+
+            $validated_suggestions[] = $resolved;
         }
 
         return $validated_suggestions;
     }
 
     /**
-     * Validar uma sugestão individual
+     * Resolver paragraph_index → texto do parágrafo e validar a sugestão.
      *
-     * @param array $suggestion Sugestão a ser validada.
-     * @return bool Se a sugestão é válida.
+     * @param array $suggestion Sugestão crua da IA.
+     * @return array|false Sugestão sanitizada ou false se inválida.
      */
-    private function validate_suggestion( $suggestion ) {
-        // Verificar campos obrigatórios
-        $required_fields = array(
-            'paragraph',
-            'anchor_text',
-            'target_post_id',
-            'confidence_score',
-        );
+    private function resolve_suggestion( $suggestion ) {
+        if ( ! is_array( $suggestion ) ) {
+            return false;
+        }
 
-        foreach ( $required_fields as $field ) {
-            if ( ! isset( $suggestion[ $field ] ) || empty( $suggestion[ $field ] ) ) {
+        // Compatibilidade: aceitar tanto paragraph_index quanto paragraph (legado).
+        $paragraph = '';
+
+        if ( isset( $suggestion['paragraph_index'] ) ) {
+            $idx = absint( $suggestion['paragraph_index'] ) - 1;
+
+            if ( $idx < 0 || ! isset( $this->current_paragraphs[ $idx ] ) ) {
+                $this->log( 'paragraph_index inválido: ' . $suggestion['paragraph_index'] );
+                return false;
+            }
+
+            // Bloquear primeiro parágrafo conforme regra do prompt.
+            if ( 0 === $idx ) {
+                $this->log( 'Sugestão descartada: primeiro parágrafo não pode receber link.' );
+                return false;
+            }
+
+            $paragraph = $this->current_paragraphs[ $idx ];
+        } elseif ( isset( $suggestion['paragraph'] ) && is_string( $suggestion['paragraph'] ) ) {
+            $paragraph = $suggestion['paragraph'];
+        } else {
+            return false;
+        }
+
+        $required = array( 'anchor_text', 'target_post_id', 'confidence_score' );
+        foreach ( $required as $field ) {
+            if ( ! isset( $suggestion[ $field ] ) || '' === $suggestion[ $field ] ) {
                 return false;
             }
         }
 
-        // Verificar se o anchor text está no parágrafo
-        if ( stripos( $suggestion['paragraph'], $suggestion['anchor_text'] ) === false ) {
-            $this->log( 'Anchor text não encontrado no parágrafo: ' . $suggestion['anchor_text'] );
+        $anchor = (string) $suggestion['anchor_text'];
+
+        if ( '' === $paragraph || stripos( $paragraph, $anchor ) === false ) {
+            $this->log( 'Anchor text não encontrado no parágrafo: ' . $anchor );
             return false;
         }
 
-        // Verificar se o post de destino existe
-        $target_post = get_post( $suggestion['target_post_id'] );
+        // Bloquear âncoras que já são links no post original.
+        if ( ! empty( $this->excluded_anchors ) && in_array( mb_strtolower( $anchor ), $this->excluded_anchors, true ) ) {
+            $this->log( 'Anchor descartado (já é link no post): ' . $anchor );
+            return false;
+        }
+
+        $target_id = absint( $suggestion['target_post_id'] );
+
+        // Bloquear destino que já está linkado ou foi rejeitado anteriormente.
+        if ( ! empty( $this->excluded_target_ids ) && in_array( $target_id, $this->excluded_target_ids, true ) ) {
+            $this->log( 'Target descartado (já linkado/rejeitado): ' . $target_id );
+            return false;
+        }
+
+        $target_post = get_post( $target_id );
         if ( ! $target_post || 'publish' !== $target_post->post_status ) {
             $this->log( 'Post de destino não encontrado: ' . $suggestion['target_post_id'] );
             return false;
         }
 
-        // Verificar score mínimo
-        $min_score = get_option( 'ailseo_min_confidence_score', 70 );
-        if ( $suggestion['confidence_score'] < $min_score ) {
-            $this->log( 'Score abaixo do mínimo: ' . $suggestion['confidence_score'] );
+        $score     = min( 100, max( 0, absint( $suggestion['confidence_score'] ) ) );
+        $min_score = absint( get_option( 'ailseo_min_confidence_score', 70 ) );
+
+        if ( $score < $min_score ) {
+            $this->log( 'Score abaixo do mínimo: ' . $score );
             return false;
         }
 
-        return true;
+        $justification = isset( $suggestion['justification'] ) ? (string) $suggestion['justification'] : '';
+
+        return array(
+            'paragraph'        => sanitize_textarea_field( $paragraph ),
+            'anchor_text'      => sanitize_text_field( $anchor ),
+            'target_post_id'   => absint( $suggestion['target_post_id'] ),
+            'position'         => '',
+            'justification'    => sanitize_textarea_field( $justification ),
+            'confidence_score' => $score,
+        );
     }
 
     /**
      * Log de operações (apenas em modo debug)
+     *
+     * @param string $message Mensagem de log.
+     */
+    /**
+     * Decodificar JSON da IA com fallback para caracteres de controle inválidos.
+     *
+     * @param string $response Resposta JSON da IA.
+     * @return array|null
+     */
+    /**
+     * Construir prompt de recuperação para respostas truncadas ou inválidas.
+     *
+     * @param string $original_prompt Prompt original.
+     * @return string
+     */
+    private function build_recovery_prompt( $original_prompt ) {
+        return $original_prompt . "\n\nIMPORTANTE: Sua resposta anterior ficou inválida ou truncada." .
+            "\nResponda novamente com JSON estrito e completo." .
+            "\nSe houver qualquer dúvida, retorne {\"suggestions\":[]}." .
+            "\nNão interrompa o JSON no meio de um campo." .
+            "\nNão inclua markdown." .
+            "\nNão inclua quebras de linha literais dentro dos valores de string.";
+    }
+
+    private function decode_json_response( $response ) {
+        $data = json_decode( $response, true );
+
+        if ( JSON_ERROR_NONE === json_last_error() ) {
+            return $data;
+        }
+
+        $sanitized_response = $this->escape_control_characters_in_json_strings( $response );
+
+        if ( $sanitized_response !== $response ) {
+            $this->log( 'Tentando decodificar JSON após escapar caracteres de controle em strings.' );
+            $data = json_decode( $sanitized_response, true );
+        }
+
+        return $data;
+    }
+
+    /**
+     * Extrair sugestões completas de uma resposta JSON truncada.
+     *
+     * @param string $response Resposta bruta da IA.
+     * @return array
+     */
+    private function extract_partial_suggestions( $response ) {
+        $suggestions = array();
+        $array_start = strpos( $response, '"suggestions"' );
+
+        if ( false === $array_start ) {
+            return $suggestions;
+        }
+
+        $array_start = strpos( $response, '[', $array_start );
+
+        if ( false === $array_start ) {
+            return $suggestions;
+        }
+
+        $in_string    = false;
+        $is_escaped   = false;
+        $object_depth = 0;
+        $object_start = null;
+        $length       = strlen( $response );
+
+        for ( $index = $array_start + 1; $index < $length; $index++ ) {
+            $char = $response[ $index ];
+
+            if ( $in_string ) {
+                if ( $is_escaped ) {
+                    $is_escaped = false;
+                    continue;
+                }
+
+                if ( '\\' === $char ) {
+                    $is_escaped = true;
+                    continue;
+                }
+
+                if ( '"' === $char ) {
+                    $in_string = false;
+                }
+
+                continue;
+            }
+
+            if ( '"' === $char ) {
+                $in_string = true;
+                continue;
+            }
+
+            if ( '{' === $char ) {
+                if ( 0 === $object_depth ) {
+                    $object_start = $index;
+                }
+
+                $object_depth++;
+                continue;
+            }
+
+            if ( '}' === $char && $object_depth > 0 ) {
+                $object_depth--;
+
+                if ( 0 === $object_depth && null !== $object_start ) {
+                    $object_json = substr( $response, $object_start, $index - $object_start + 1 );
+                    $object_data = $this->decode_json_response( $object_json );
+
+                    if ( is_array( $object_data ) ) {
+                        $resolved = $this->resolve_suggestion( $object_data );
+
+                        if ( false !== $resolved ) {
+                            $suggestions[] = $resolved;
+                        }
+                    }
+
+                    $object_start = null;
+                }
+            }
+        }
+
+        return $suggestions;
+    }
+
+    /**
+     * Escapar caracteres de controle inválidos dentro de strings JSON.
+     *
+     * Mantém a estrutura do JSON intacta e só altera controles crus dentro
+     * de valores string, como novas linhas literais retornadas pelo modelo.
+     *
+     * @param string $json JSON bruto.
+     * @return string
+     */
+    private function escape_control_characters_in_json_strings( $json ) {
+        $result      = '';
+        $in_string   = false;
+        $is_escaped  = false;
+        $json_length = strlen( $json );
+
+        for ( $index = 0; $index < $json_length; $index++ ) {
+            $char = $json[ $index ];
+            $ord  = ord( $char );
+
+            if ( $in_string ) {
+                if ( $is_escaped ) {
+                    $result    .= $char;
+                    $is_escaped = false;
+                    continue;
+                }
+
+                if ( '\\' === $char ) {
+                    $result    .= $char;
+                    $is_escaped = true;
+                    continue;
+                }
+
+                if ( '"' === $char ) {
+                    $result   .= $char;
+                    $in_string = false;
+                    continue;
+                }
+
+                if ( 10 === $ord ) {
+                    $result .= '\n';
+                    continue;
+                }
+
+                if ( 13 === $ord ) {
+                    $result .= '\r';
+                    continue;
+                }
+
+                if ( 9 === $ord ) {
+                    $result .= '\t';
+                    continue;
+                }
+
+                if ( $ord < 32 ) {
+                    $result .= sprintf( '\u%04x', $ord );
+                    continue;
+                }
+            } elseif ( '"' === $char ) {
+                $in_string = true;
+            }
+
+            $result .= $char;
+        }
+
+        return $result;
+    }
+
+    /**
+     * Log de operaÃ§Ãµes (apenas em modo debug)
      *
      * @param string $message Mensagem de log.
      */
