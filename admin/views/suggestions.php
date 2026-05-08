@@ -206,6 +206,13 @@ foreach ( $suggestions as $suggestion ) {
                                 }
                                 ?>
                             </span>
+                        <?php elseif ( 'rejected' === $suggestion['status'] ) : ?>
+                            <button type="button"
+                                    class="button ailseo-restore-btn"
+                                    data-suggestion-id="<?php echo esc_attr( $suggestion['id'] ); ?>">
+                                <span class="dashicons dashicons-image-rotate"></span>
+                                <?php esc_html_e( 'Restaurar', 'ai-internal-links-seo' ); ?>
+                            </button>
                         <?php endif; ?>
                     </div>
                         </div>

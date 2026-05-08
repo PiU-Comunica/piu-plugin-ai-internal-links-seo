@@ -264,6 +264,7 @@ class Admin {
                 'confirm_apply'    => __( 'Aplicar este link no post?', 'ai-internal-links-seo' ),
                 'confirm_reject'   => __( 'Rejeitar esta sugestão?', 'ai-internal-links-seo' ),
                 'confirm_undo'     => __( 'Desfazer este link e restaurar o texto original?', 'ai-internal-links-seo' ),
+                'confirm_restore'  => __( 'Restaurar esta sugestão para pendente?', 'ai-internal-links-seo' ),
                 'analyzing'        => __( 'Analisando...', 'ai-internal-links-seo' ),
                 'applying'         => __( 'Aplicando...', 'ai-internal-links-seo' ),
                 'error'            => __( 'Ocorreu um erro. Tente novamente.', 'ai-internal-links-seo' ),

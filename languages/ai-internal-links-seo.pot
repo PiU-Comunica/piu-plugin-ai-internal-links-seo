@@ -1,9 +1,9 @@
-# Copyright (C) 2024 PIU Digital
+# Copyright (C) 2024 Agência PiU
 # This file is distributed under the same license as the AI Internal Links SEO plugin.
 msgid ""
 msgstr ""
-"Project-Id-Version: AI Internal Links SEO 1.0.0\n"
-"Report-Msgid-Bugs-To: https://piu.digital\n"
+"Project-Id-Version: AI Internal Links SEO 1.1.0\n"
+"Report-Msgid-Bugs-To: https://agenciapiu.com.br\n"
 "POT-Creation-Date: 2024-01-01 00:00+0000\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -246,4 +246,20 @@ msgstr ""
 
 #: includes/class-link-applier.php
 msgid "Link removido com sucesso! A sugestão voltou para pendente."
+msgstr ""
+
+#: includes/class-link-applier.php
+msgid "Apenas sugestões rejeitadas podem ser restauradas."
+msgstr ""
+
+#: includes/class-link-applier.php
+msgid "Sugestão restaurada para pendente."
+msgstr ""
+
+#: admin/views/suggestions.php
+msgid "Restaurar"
+msgstr ""
+
+#: admin/class-admin.php
+msgid "Restaurar esta sugestão para pendente?"
 msgstr ""

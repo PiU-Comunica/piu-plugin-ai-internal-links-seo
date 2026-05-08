@@ -235,6 +235,61 @@ class Link_Applier {
     }
 
     /**
+     * Restaurar uma sugestão rejeitada para pendente
+     *
+     * @param int $suggestion_id ID da sugestão.
+     * @return array Resultado da operação.
+     */
+    public function restore_suggestion( $suggestion_id ) {
+        global $wpdb;
+
+        $table_name = $wpdb->prefix . 'ailseo_suggestions';
+
+        // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
+        $suggestion = $wpdb->get_row(
+            $wpdb->prepare(
+                "SELECT * FROM $table_name WHERE id = %d",
+                $suggestion_id
+            ),
+            ARRAY_A
+        );
+
+        if ( ! $suggestion ) {
+            return array(
+                'success' => false,
+                'message' => __( 'Sugestão não encontrada.', 'ai-internal-links-seo' ),
+            );
+        }
+
+        if ( 'rejected' !== $suggestion['status'] ) {
+            return array(
+                'success' => false,
+                'message' => __( 'Apenas sugestões rejeitadas podem ser restauradas.', 'ai-internal-links-seo' ),
+            );
+        }
+
+        // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
+        $wpdb->update(
+            $table_name,
+            array( 'status' => 'pending' ),
+            array( 'id' => $suggestion_id ),
+            array( '%s' ),
+            array( '%d' )
+        );
+
+        $this->log_action( $suggestion['post_id'], 'link_restored', array(
+            'target_post_id' => $suggestion['target_post_id'],
+        ), $suggestion_id );
+
+        $this->log( 'Sugestão restaurada: ' . $suggestion_id );
+
+        return array(
+            'success' => true,
+            'message' => __( 'Sugestão restaurada para pendente.', 'ai-internal-links-seo' ),
+        );
+    }
+
+    /**
      * Desfazer aplicação de um link
      *
      * @param int $suggestion_id ID da sugestão.

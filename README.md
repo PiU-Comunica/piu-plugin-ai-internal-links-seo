@@ -69,6 +69,7 @@ Para cada sugestão, você pode:
 - **Aplicar**: insere o link automaticamente no post
 - **Rejeitar**: descarta a sugestão
 - **Desfazer**: reverte um link aplicado
+- **Restaurar**: devolve uma sugestão rejeitada para o status pendente
 
 ## Funcionalidades
 
@@ -91,7 +92,7 @@ Para cada sugestão, você pode:
 - Preview do parágrafo com texto âncora destacado
 - Justificativa da IA para cada sugestão
 - Score de confiança
-- Ações de aplicar, rejeitar e desfazer
+- Ações de aplicar, rejeitar, desfazer e restaurar
 
 ### Configurações
 
@@ -184,6 +185,11 @@ Os logs são salvos em `wp-content/debug.log` com prefixo `[AI Internal Links SE
 
 ## Changelog
 
+### 1.1.0
+
+- Botão **Restaurar** em sugestões rejeitadas para devolvê-las ao status pendente
+- Ação registrada no log de auditoria como `link_restored`
+
 ### 1.0.0
 
 - Versão inicial
@@ -195,7 +201,7 @@ Os logs são salvos em `wp-content/debug.log` com prefixo `[AI Internal Links SE
 
 ## Suporte
 
-Para reportar bugs ou solicitar funcionalidades, entre em contato com a equipe PIU Digital.
+Para reportar bugs ou solicitar funcionalidades, entre em contato com a equipe da Agência PiU (https://agenciapiu.com.br).
 
 ## Licença
 

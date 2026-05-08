@@ -1,11 +1,11 @@
 <?php
 /**
  * Plugin Name: AI Internal Links SEO
- * Plugin URI: https://piu.digital
+ * Plugin URI: https://agenciapiu.com.br
  * Description: Plugin que analisa posts e sugere links internos usando IA (Gemini API) para melhorar o SEO do seu blog.
- * Version: 1.0.0
- * Author: PIU Digital
- * Author URI: https://piu.digital
+ * Version: 1.1.0
+ * Author: Agência PiU
+ * Author URI: https://agenciapiu.com.br
  * License: GPL v2 or later
  * License URI: https://www.gnu.org/licenses/gpl-2.0.html
  * Text Domain: ai-internal-links-seo
@@ -22,7 +22,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 // Constantes do plugin
-define( 'AILSEO_VERSION', '1.0.0' );
+define( 'AILSEO_VERSION', '1.1.0' );
 define( 'AILSEO_PLUGIN_DIR', plugin_dir_path( __FILE__ ) );
 define( 'AILSEO_PLUGIN_URL', plugin_dir_url( __FILE__ ) );
 define( 'AILSEO_PLUGIN_BASENAME', plugin_basename( __FILE__ ) );

@@ -4,7 +4,7 @@ Guia para agentes que forem trabalhar neste plugin WordPress.
 
 ## Visão Geral
 
-Este repositório contém o plugin **AI Internal Links SEO**, um plugin WordPress para sugerir e aplicar links internos usando a API Gemini. O plugin roda principalmente no painel administrativo do WordPress, cria tabelas próprias no banco e usa AJAX para testar a API, analisar posts, aplicar sugestões, rejeitar sugestões e desfazer links aplicados.
+Este repositório contém o plugin **AI Internal Links SEO**, um plugin WordPress para sugerir e aplicar links internos usando a API Gemini. O plugin roda principalmente no painel administrativo do WordPress, cria tabelas próprias no banco e usa AJAX para testar a API, analisar posts, aplicar sugestões, rejeitar sugestões, desfazer links aplicados e restaurar sugestões rejeitadas para pendentes.
 
 Requisitos declarados:
 
@@ -19,7 +19,7 @@ Requisitos declarados:
 - `includes/class-plugin.php`: orquestra os componentes principais e registra os handlers AJAX.
 - `includes/class-ai-client.php`: comunicação com a Gemini API, montagem do prompt e validação da resposta JSON.
 - `includes/class-analyzer.php`: prepara conteúdo de posts, busca posts disponíveis, chama a IA e salva sugestões.
-- `includes/class-link-applier.php`: aplica, rejeita e desfaz sugestões no conteúdo dos posts.
+- `includes/class-link-applier.php`: aplica, rejeita, desfaz e restaura sugestões no conteúdo dos posts.
 - `includes/class-cache.php`: cache via transients do WordPress.
 - `admin/class-admin.php`: menus, settings, assets e renderização das páginas administrativas.
 - `admin/views/*.php`: templates das telas de dashboard, análise, sugestões e configurações.
@@ -58,7 +58,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 6. `Analyzer` prepara o post e a lista de posts de destino.
 7. `AI_Client` envia o prompt para o Gemini e espera JSON válido.
 8. Sugestões válidas são gravadas em `wp_ailseo_suggestions`.
-9. `Link_Applier` aplica, rejeita ou desfaz a sugestão, atualizando o post e registrando log.
+9. `Link_Applier` aplica, rejeita, desfaz ou restaura a sugestão, atualizando o post quando necessário e registrando log.
 10. A tela de sugestões agrupa os cards por post de origem, mantendo ações individuais por sugestão.
 
 ## Banco de Dados
@@ -82,7 +82,7 @@ Cuidados:
 
 - Alterações de schema devem passar por `dbDelta`.
 - Atualize `AILSEO_VERSION` e `ailseo_db_version` quando houver migração real.
-- Ao mexer em status, considere os estados atualmente usados: `pending`, `applied` e `rejected`.
+- Ao mexer em status, considere os estados atualmente usados: `pending`, `applied` e `rejected`. A restauração devolve uma sugestão `rejected` para `pending` sem alterar o conteúdo do post.
 - Ao reanalisar um post, `Analyzer::save_suggestions()` remove sugestões `pending` antigas do mesmo post, preserva `applied` e `rejected`, e evita recriar sugestão já rejeitada para a mesma combinação de post de origem, post de destino e texto âncora.
 
 ## Desinstalação e Remoção de Dados
@@ -178,7 +178,7 @@ php -l uninstall.php
 - Abrir as telas `AI Internal Links > Dashboard`, `Analisar Posts`, `Sugestões` e `Configurações`.
 - Testar nonce/capability indiretamente pelas ações AJAX.
 - Testar conexão com uma API key válida em ambiente seguro.
-- Analisar um post, revisar sugestões, aplicar, rejeitar e desfazer.
+- Analisar um post, revisar sugestões, aplicar, rejeitar, desfazer e restaurar.
 - Marcar e desmarcar a opção de exclusão de dados ao deletar o plugin, confirmando que a configuração é salva corretamente.
 - Em um ambiente descartável, deletar o plugin com a opção marcada e confirmar que tabelas, opções e transients do plugin foram removidos.
 

@@ -118,6 +118,9 @@ class Plugin {
 
         // Desfazer aplicação
         add_action( 'wp_ajax_ailseo_undo_suggestion', array( $this, 'ajax_undo_suggestion' ) );
+
+        // Restaurar sugestão rejeitada
+        add_action( 'wp_ajax_ailseo_restore_suggestion', array( $this, 'ajax_restore_suggestion' ) );
     }
 
     /**
@@ -333,6 +336,39 @@ class Plugin {
 
         // Desfazer sugestão
         $result = $this->link_applier->undo_suggestion( $suggestion_id );
+
+        if ( $result['success'] ) {
+            wp_send_json_success( array(
+                'message' => $result['message'],
+            ) );
+        } else {
+            wp_send_json_error( array(
+                'message' => $result['message'],
+            ) );
+        }
+    }
+
+    /**
+     * AJAX: Restaurar sugestão rejeitada
+     */
+    public function ajax_restore_suggestion() {
+        check_ajax_referer( 'ailseo_nonce', 'nonce' );
+
+        if ( ! current_user_can( 'manage_options' ) ) {
+            wp_send_json_error( array(
+                'message' => __( 'Permissão negada.', 'ai-internal-links-seo' ),
+            ) );
+        }
+
+        $suggestion_id = isset( $_POST['suggestion_id'] ) ? absint( $_POST['suggestion_id'] ) : 0;
+
+        if ( ! $suggestion_id ) {
+            wp_send_json_error( array(
+                'message' => __( 'ID da sugestão inválido.', 'ai-internal-links-seo' ),
+            ) );
+        }
+
+        $result = $this->link_applier->restore_suggestion( $suggestion_id );
 
         if ( $result['success'] ) {
             wp_send_json_success( array(

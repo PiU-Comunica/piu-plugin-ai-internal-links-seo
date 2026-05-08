@@ -41,6 +41,9 @@
             // Desfazer sugestão
             $(document).on('click', '.ailseo-undo-btn', this.undoSuggestion);
 
+            // Restaurar sugestão rejeitada
+            $(document).on('click', '.ailseo-restore-btn', this.restoreSuggestion);
+
             // Fechar modal
             $(document).on('click', '.ailseo-modal-close, .ailseo-modal', this.closeModal);
             $(document).on('click', '.ailseo-modal-content', function(e) {
@@ -349,6 +352,58 @@
                             .text('Pendente');
 
                         // Restaurar botões
+                        var $actions = $card.find('.ailseo-suggestion-actions');
+                        $actions.html(
+                            '<button type="button" class="button button-primary ailseo-apply-btn" data-suggestion-id="' + suggestionId + '">' +
+                            '<span class="dashicons dashicons-yes"></span> Aplicar Link</button> ' +
+                            '<button type="button" class="button ailseo-reject-btn" data-suggestion-id="' + suggestionId + '">' +
+                            '<span class="dashicons dashicons-no"></span> Rejeitar</button>'
+                        );
+
+                        AILSEO.showNotice('success', response.data.message);
+                    } else {
+                        AILSEO.showNotice('error', response.data.message);
+                    }
+                },
+                error: function() {
+                    AILSEO.showNotice('error', ailseo.i18n.error);
+                },
+                complete: function() {
+                    $button.prop('disabled', false).removeClass('ailseo-loading');
+                }
+            });
+        },
+
+        /**
+         * Restaurar sugestão rejeitada
+         */
+        restoreSuggestion: function() {
+            var $button = $(this);
+            var suggestionId = $button.data('suggestion-id');
+            var $card = $button.closest('.ailseo-suggestion-card');
+
+            if (!confirm(ailseo.i18n.confirm_restore)) {
+                return;
+            }
+
+            $button.prop('disabled', true).addClass('ailseo-loading');
+
+            $.ajax({
+                url: ailseo.ajax_url,
+                type: 'POST',
+                data: {
+                    action: 'ailseo_restore_suggestion',
+                    nonce: ailseo.nonce,
+                    suggestion_id: suggestionId
+                },
+                success: function(response) {
+                    if (response.success) {
+                        $card.removeClass('status-rejected').addClass('status-pending');
+                        $card.find('.ailseo-suggestion-status')
+                            .removeClass('rejected')
+                            .addClass('pending')
+                            .text('Pendente');
+
                         var $actions = $card.find('.ailseo-suggestion-actions');
                         $actions.html(
                             '<button type="button" class="button button-primary ailseo-apply-btn" data-suggestion-id="' + suggestionId + '">' +
