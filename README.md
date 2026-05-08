@@ -185,6 +185,10 @@ Os logs são salvos em `wp-content/debug.log` com prefixo `[AI Internal Links SE
 
 ## Changelog
 
+### 1.1.1
+
+- Teste atualização
+
 ### 1.1.0
 
 - Botão **Restaurar** em sugestões rejeitadas para devolvê-las ao status pendente
