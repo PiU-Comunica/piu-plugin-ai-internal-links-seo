@@ -185,6 +185,10 @@ Os logs são salvos em `wp-content/debug.log` com prefixo `[AI Internal Links SE
 
 ## Changelog
 
+### 1.1.2
+
+- Teste atualização
+
 ### 1.1.1
 
 - Teste atualização
