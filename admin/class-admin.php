@@ -176,6 +176,17 @@ class Admin {
                 'default'           => 70,
             )
         );
+
+        // Remover dados ao desinstalar
+        register_setting(
+            'ailseo_settings',
+            'ailseo_delete_data_on_uninstall',
+            array(
+                'type'              => 'boolean',
+                'sanitize_callback' => array( $this, 'sanitize_boolean_setting' ),
+                'default'           => false,
+            )
+        );
     }
 
     /**
@@ -205,6 +216,16 @@ class Admin {
     public function sanitize_confidence_score( $input ) {
         $score = absint( $input );
         return min( 100, max( 0, $score ) );
+    }
+
+    /**
+     * Sanitizar configuração booleana.
+     *
+     * @param mixed $input Input a ser sanitizado.
+     * @return bool Valor sanitizado.
+     */
+    public function sanitize_boolean_setting( $input ) {
+        return (bool) $input;
     }
 
     /**
@@ -388,6 +409,7 @@ class Admin {
         $selected_types   = get_option( 'ailseo_post_types', array( 'post' ) );
         $max_links        = get_option( 'ailseo_max_links_per_post', 3 );
         $min_score        = get_option( 'ailseo_min_confidence_score', 70 );
+        $delete_on_uninstall = (bool) get_option( 'ailseo_delete_data_on_uninstall', false );
 
         include AILSEO_PLUGIN_DIR . 'admin/views/settings.php';
     }

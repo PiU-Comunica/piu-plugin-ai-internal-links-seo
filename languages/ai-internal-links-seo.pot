@@ -185,6 +185,22 @@ msgid "Score Mínimo de Confiança"
 msgstr ""
 
 #: admin/views/settings.php
+msgid "Desinstalação"
+msgstr ""
+
+#: admin/views/settings.php
+msgid "Dados do plugin"
+msgstr ""
+
+#: admin/views/settings.php
+msgid "Excluir tabelas, configurações e cache ao deletar o plugin."
+msgstr ""
+
+#: admin/views/settings.php
+msgid "Esta ação será executada somente quando o plugin for excluído pelo painel do WordPress. Links já aplicados nos posts não serão removidos automaticamente."
+msgstr ""
+
+#: admin/views/settings.php
 msgid "Boas Práticas de SEO"
 msgstr ""
 

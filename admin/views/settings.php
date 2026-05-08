@@ -164,6 +164,33 @@ if ( ! defined( 'ABSPATH' ) ) {
             </table>
         </div>
 
+        <!-- Desinstalação -->
+        <div class="ailseo-settings-section">
+            <h2><?php esc_html_e( 'Desinstalação', 'ai-internal-links-seo' ); ?></h2>
+
+            <table class="form-table">
+                <tr>
+                    <th scope="row">
+                        <?php esc_html_e( 'Dados do plugin', 'ai-internal-links-seo' ); ?>
+                    </th>
+                    <td>
+                        <input type="hidden" name="ailseo_delete_data_on_uninstall" value="0">
+                        <label for="ailseo_delete_data_on_uninstall">
+                            <input type="checkbox"
+                                   id="ailseo_delete_data_on_uninstall"
+                                   name="ailseo_delete_data_on_uninstall"
+                                   value="1"
+                                   <?php checked( $delete_on_uninstall ); ?>>
+                            <?php esc_html_e( 'Excluir tabelas, configurações e cache ao deletar o plugin.', 'ai-internal-links-seo' ); ?>
+                        </label>
+                        <p class="description">
+                            <?php esc_html_e( 'Esta ação será executada somente quando o plugin for excluído pelo painel do WordPress. Links já aplicados nos posts não serão removidos automaticamente.', 'ai-internal-links-seo' ); ?>
+                        </p>
+                    </td>
+                </tr>
+            </table>
+        </div>
+
         <!-- Boas Práticas -->
         <div class="ailseo-settings-section ailseo-info-section">
             <h2><?php esc_html_e( 'Boas Práticas de SEO', 'ai-internal-links-seo' ); ?></h2>

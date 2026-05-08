@@ -15,6 +15,7 @@ Requisitos declarados:
 ## Estrutura do Projeto
 
 - `ai-internal-links-seo.php`: arquivo principal do plugin, cabeçalho WordPress, constantes, autoloader, hooks de ativação/desativação e inicialização.
+- `uninstall.php`: rotina de desinstalação executada quando o plugin é deletado pelo painel do WordPress.
 - `includes/class-plugin.php`: orquestra os componentes principais e registra os handlers AJAX.
 - `includes/class-ai-client.php`: comunicação com a Gemini API, montagem do prompt e validação da resposta JSON.
 - `includes/class-analyzer.php`: prepara conteúdo de posts, busca posts disponíveis, chama a IA e salva sugestões.
@@ -67,12 +68,32 @@ Na ativação, o plugin cria:
 - `{prefix}_ailseo_suggestions`: sugestões de links, status, contexto original, parágrafo modificado e dados de aplicação.
 - `{prefix}_ailseo_log`: auditoria de ações executadas.
 
+Configurações principais em `wp_options`:
+
+- `ailseo_api_key`
+- `ailseo_gemini_model`
+- `ailseo_post_types`
+- `ailseo_max_links_per_post`
+- `ailseo_min_confidence_score`
+- `ailseo_delete_data_on_uninstall`
+- `ailseo_db_version`
+
 Cuidados:
 
 - Alterações de schema devem passar por `dbDelta`.
 - Atualize `AILSEO_VERSION` e `ailseo_db_version` quando houver migração real.
 - Ao mexer em status, considere os estados atualmente usados: `pending`, `applied` e `rejected`.
 - Ao reanalisar um post, `Analyzer::save_suggestions()` remove sugestões `pending` antigas do mesmo post, preserva `applied` e `rejected`, e evita recriar sugestão já rejeitada para a mesma combinação de post de origem, post de destino e texto âncora.
+
+## Desinstalação e Remoção de Dados
+
+O plugin possui uma opção em **AI Internal Links > Configurações** para remover dados ao deletar o plugin.
+
+- A opção é salva em `ailseo_delete_data_on_uninstall`.
+- Quando a opção está desmarcada, `uninstall.php` não remove tabelas nem opções.
+- Quando a opção está marcada, `uninstall.php` remove as tabelas `{prefix}_ailseo_suggestions` e `{prefix}_ailseo_log`, opções do plugin, transients com prefixo `ailseo_` e o hook `ailseo_scheduled_analysis`.
+- Não remova automaticamente links já aplicados no conteúdo dos posts durante o uninstall. Isso altera conteúdo real e pode depender de dados que estão sendo apagados.
+- Ao adicionar novas opções ou dados persistentes do plugin, atualize também `uninstall.php`, `README.md` e `languages/ai-internal-links-seo.pot`.
 
 ## Segurança
 
@@ -84,6 +105,7 @@ Mantenha estes padrões em qualquer alteração:
 - Queries com valores dinâmicos devem usar `$wpdb->prepare`.
 - Saídas em views devem ser escapadas no contexto correto.
 - Links aplicados no conteúdo devem usar URL e título escapados.
+- `uninstall.php` deve manter a proteção `if ( ! defined( 'WP_UNINSTALL_PLUGIN' ) ) { exit; }`.
 
 ## Integração com IA
 
@@ -122,13 +144,14 @@ Ao mexer nessa área:
 - Evite dependências JS/CSS externas sem necessidade.
 - Ao criar novos textos em JS, prefira passá-los via `wp_localize_script` para manter tradução.
 - Em `admin/views/suggestions.php`, preserve o agrupamento por post de origem e mantenha os botões com `data-suggestion-id`, pois o JavaScript ainda processa cada sugestão individualmente.
+- Em `admin/views/settings.php`, o checkbox `ailseo_delete_data_on_uninstall` deve manter um input hidden com valor `0`, para permitir salvar corretamente quando a opção for desmarcada.
 
 ## Internacionalização
 
 - Use `__()`, `_e()`, `esc_html__()`, `esc_attr__()` e `_n()` conforme o contexto.
 - Mantenha o text domain `ai-internal-links-seo`.
 - Se novas strings forem adicionadas, atualize `languages/ai-internal-links-seo.pot`.
-- Atenção: alguns arquivos parecem ter texto com mojibake, por exemplo `ConfiguraÃ§Ãµes`. Antes de alterar textos em massa, confirme a codificação dos arquivos e evite misturar correções de encoding com mudanças funcionais.
+- Preserve os arquivos em UTF-8 e com acentuação correta. Evite misturar correções grandes de encoding com mudanças funcionais, a menos que a tarefa seja justamente normalizar a documentação.
 
 ## Testes e Validação
 
@@ -146,6 +169,8 @@ php -l includes/class-analyzer.php
 php -l includes/class-link-applier.php
 php -l includes/class-cache.php
 php -l admin/class-admin.php
+php -l admin/views/settings.php
+php -l uninstall.php
 ```
 
 - Ativar o plugin em uma instalação WordPress local.
@@ -154,6 +179,8 @@ php -l admin/class-admin.php
 - Testar nonce/capability indiretamente pelas ações AJAX.
 - Testar conexão com uma API key válida em ambiente seguro.
 - Analisar um post, revisar sugestões, aplicar, rejeitar e desfazer.
+- Marcar e desmarcar a opção de exclusão de dados ao deletar o plugin, confirmando que a configuração é salva corretamente.
+- Em um ambiente descartável, deletar o plugin com a opção marcada e confirmar que tabelas, opções e transients do plugin foram removidos.
 
 ## Git e Fluxo de Trabalho
 
@@ -169,4 +196,5 @@ php -l admin/class-admin.php
 - Mudanças em prompt ou parsing podem afetar custo, latência e qualidade das sugestões.
 - Mudanças em queries administrativas devem considerar sites com muitos posts e muitas sugestões.
 - Mudanças em schema precisam preservar instalações existentes.
+- Mudanças em `uninstall.php` podem apagar dados permanentemente; teste em ambiente descartável antes de usar em site real.
 - Mantenha compatibilidade com PHP 7.4, conforme cabeçalho do plugin.
